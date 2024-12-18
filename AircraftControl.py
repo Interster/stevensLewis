@@ -3,6 +3,7 @@ import numpy as np
 import math as math
 from scipy.integrate import odeint
 import matplotlib.pyplot as plt
+from scipy.optimize import minimize
 
 #%%
 # Figure 3.3-1 Computer model of a transport aircraft
@@ -29,7 +30,7 @@ vliegtuig = {'S' : 2170.0,
              'CM0' : 0.05,
              'DCDG' : 0.0,
              'DCMG' : 0.0,
-             'XCG' : 0.28
+             'XCG' : 0.25
              }
 
 
@@ -100,6 +101,7 @@ def f(x, t, v, land, THTL, ELEV):
     # Sleurkrag (drag polar)
     CD = v['DCDG'] + v['CD0'] + v['CDCLS']*CL*CL
 
+    xd = [0, 0, 0, 0, 0, 0] # Inisialiseer xd
     # VT rate
     xd[0] = (THR*CALP - QS*CD)/v['AM'] - v['G']*math.sin(GAM)
 
@@ -131,24 +133,57 @@ def f(x, t, v, land, THTL, ELEV):
 
 #%% 
 # f(x, t, v, land, THTL, ELEV)
-x = [100,0,0,0,0,0]
+x = [170,22.1*3.14159/180,22.1*3.14159/180,0,0,0]
 
 print(f(x, 0, vliegtuig, False, 0, 0))
 
 #%% Integreer funksie
 
-x0 = [100,0,0,0,0,0]
+#x0 = [spoed, alpha, theta, heiversnelling, 
+# opwaartse spoed, horizontale spoed]
+x0 = [170,22.1*3.14159/180,22.1*3.14159/180,0,0,0]
+throttle = 0.297
+elev = -25.7
+
 
 t = np.linspace(0, 10, 101)
-sol = odeint(f, x0, t, args=(vliegtuig, False, 0, 0))
+sol = odeint(f, x0, t, args=(vliegtuig, False, throttle, elev))
 
-plt.plot(t, sol[:, 0], 'b', label='theta(t)')
-plt.plot(t, sol[:, 1], 'g', label='omega(t)')
+plt.plot(t, sol[:, 0], 'b', label='V(t)')
+plt.plot(t, sol[:, 1], 'g', label='\alpha(t)')
 
 plt.legend(loc='best')
 plt.xlabel('t')
 plt.grid()
 plt.show()
+
+#%%
+# Trimmer funksie
+
+def doelfunksie(inset, vliegtuig):
+    # inset = [Spoed, throttle, elevator, theta]
+    x0 = [inset[0], inset[3], inset[3],0,0,0]
+
+    xd = f(x0, 0, vliegtuig, False, inset[1], inset[2])
+
+    doel = xd[0]**2 + 100*xd[1]**2 + 10*xd[3]**2
+
+    return doel
+
+#%%
+
+inset = [170, 0.2, -20, 22.1*3.14159/180]
+res = minimize(doelfunksie, inset, method='nelder-mead', 
+               args=(vliegtuig), options={'xatol': 1e-8, 'disp': True})
+
+print(res.x)
+
+# inset = [Spoed, throttle, elevator, theta]
+inset = [500, 0.293, 2.46, 0.58*3.14159/180]
+res = minimize(doelfunksie, inset, method='nelder-mead', 
+               args=(vliegtuig), options={'xatol': 1e-8, 'disp': True})
+
+print(res.x)
 
 #%%
 # Voorbeeld integrasie
@@ -175,3 +210,19 @@ plt.legend(loc='best')
 plt.xlabel('t')
 plt.grid()
 plt.show()
+
+#%%
+# Voorbeeld minimering met Nelder Mead
+def rosen_with_args(x, a, b):
+
+    """The Rosenbrock function with additional arguments"""
+
+    return sum(a*(x[1:]-x[:-1]**2.0)**2.0 + (1-x[:-1])**2.0) + b
+
+x0 = np.array([1.3, 0.7, 0.8, 1.9, 1.2])
+
+res = minimize(rosen_with_args, x0, method='nelder-mead', 
+               args=(0.5, 1.), options={'xatol': 1e-8, 'disp': True})
+
+print(res.x)
+# %%
