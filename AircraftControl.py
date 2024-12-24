@@ -61,6 +61,7 @@ def adc(VT, ALT, AMACH):
 # Vliegtuig funksie
 
 def f(x, t, v, land, THTL, ELEV):
+    # x = [VT, ALPHA, THETA, Q, H, Distance]
     VT = x[0] # True airspeed (ft/s)
     ALPHA = x[1]*v['RTOD']
     THETA = x[2]
@@ -132,25 +133,51 @@ def f(x, t, v, land, THTL, ELEV):
 
 
 #%% 
+# Voorbeeld van hoe om die vliegtuig funksie te loop
 # f(x, t, v, land, THTL, ELEV)
-x = [170,22.1*3.14159/180,22.1*3.14159/180,0,0,0]
-
-print(f(x, 0, vliegtuig, False, 0, 0))
-
-#%% Integreer funksie
-
-#x0 = [spoed, alpha, theta, heiversnelling, 
-# opwaartse spoed, horizontale spoed]
-x0 = [170,22.1*3.14159/180,22.1*3.14159/180,0,0,0]
+# x = [VT, ALPHA, THETA, Q, H, Distance]
+x0 = [170, 22.1*3.14159/180, 22.1*3.14159/180, 0, 0, 0]
 throttle = 0.297
 elev = -25.7
 
+x0 = [500, 0.58*3.14159/180, 0.58*3.14159/180, 0, 0, 0]
+throttle = 0.293
+elev = 2.46
+
+x0 = [500, 5.43*3.14159/180, 5.43*3.14159/180, 0, 30000, 0]
+throttle = 0.204
+elev = -4.1
+
+print(f(x0, 0, vliegtuig, False, throttle, elev))
+
+#%% Integreer funksie
+# Loop die funksie met Runge Kutta integrasie
+#x0 = [spoed, alpha, theta, heiversnelling, 
+# opwaartse spoed, horizontale spoed]
+x0 = [170, 22.1*3.14159/180, 22.1*3.14159/180, 0, 0, 0]
+throttle = 0.297
+elev = -25.7
+
+x0 = [500, 0.58*3.14159/180, 0.58*3.14159/180, 0, 0, 0]
+throttle = 0.293
+elev = 2.46
+
+x0 = [500, 5.43*3.14159/180, 5.43*3.14159/180, 0, 30000, 0]
+throttle = 0.204
+elev = -4.1
 
 t = np.linspace(0, 10, 101)
 sol = odeint(f, x0, t, args=(vliegtuig, False, throttle, elev))
 
+plt.plot(t, sol[:, 2]*180/3.14159, 'b', label=r'$\theta (t)$')
+plt.plot(t, sol[:, 1]*180/3.14159, 'g', label=r'$\alpha (t)$')
+
+plt.legend(loc='best')
+plt.xlabel('t')
+plt.grid()
+plt.show()
+
 plt.plot(t, sol[:, 0], 'b', label='V(t)')
-plt.plot(t, sol[:, 1], 'g', label='\alpha(t)')
 
 plt.legend(loc='best')
 plt.xlabel('t')
@@ -159,31 +186,188 @@ plt.show()
 
 #%%
 # Trimmer funksie
+# Los op die gelykvlug kondisies vir die vliegtuigmodel
 
-def doelfunksie(inset, vliegtuig):
-    # inset = [Spoed, throttle, elevator, theta]
-    x0 = [inset[0], inset[3], inset[3],0,0,0]
 
-    xd = f(x0, 0, vliegtuig, False, inset[1], inset[2])
+def doelfunksie(inset, vliegtuig, konstant):
+    # inset = [throttle, elevator, theta]
+    # konstant = [Spoed [ft/s], hoogte [ft]]
+    # x = [VT, ALPHA, THETA, Q, H, Distance]
+    # As ALPHA = THETA is dit gelykvlug, dus GAMMA = 0
+    x0 = [konstant[0], inset[2], inset[2], 0, konstant[1], 0]
+
+    # f(x, t, vliegtuig, land, THTL, ELEV)
+    xd = f(x0, 0, vliegtuig, False, inset[0], inset[1])
 
     doel = xd[0]**2 + 100*xd[1]**2 + 10*xd[3]**2
 
     return doel
 
 #%%
+# Daar is 'n handberekening vir hierdie geval in
+# TransportAircraft.ods
 
-inset = [170, 0.2, -20, 22.1*3.14159/180]
+# Druk opskrifte
+print(f"{'Altitude' :^10}{'Speed' :^10}{'Throttle' :^10}{'Elevator' :^10}{'Alpha' :^10}")
+print(f"{'ft' :^10}{'ft/s' :^10}{' ' :^10}{'deg' :^10}{'deg' :^10}")
+
+
+# inset = [throttle, elevator [deg], theta [rad]]
+inset = [0.297, -25.7, 22.1*3.14159/180]
+# konstant = [Spoed [ft/s], hoogte [ft]]
+konstant = [170, 0]
 res = minimize(doelfunksie, inset, method='nelder-mead', 
-               args=(vliegtuig), options={'xatol': 1e-8, 'disp': True})
+               args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
+print(f"{konstant[1] :^10}{konstant[0] :^10}{res.x[0]:7.3f}{res.x[1]:8.2f}{res.x[2]*180/3.14159:8.2f}")
 
-print(res.x)
 
-# inset = [Spoed, throttle, elevator, theta]
-inset = [500, 0.293, 2.46, 0.58*3.14159/180]
+# inset = [throttle, elevator [deg], theta [rad]]
+inset = [500, 0.293, 2.46, 0.58*3.14159/180, 0]
+# konstant = [Spoed [ft/s], hoogte [ft]]
+konstant = [500, 0]
 res = minimize(doelfunksie, inset, method='nelder-mead', 
-               args=(vliegtuig), options={'xatol': 1e-8, 'disp': True})
+               args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
+print(f"{konstant[1] :^10}{konstant[0] :^10}{res.x[0]:7.3f}{res.x[1]:8.2f}{res.x[2]*180/3.14159:8.2f}")
 
-print(res.x)
+
+# inset = [throttle, elevator [deg], theta [rad]]
+inset = [0.204, -4.10, 5.43*3.14159/180]
+# konstant = [Spoed [ft/s], hoogte [ft]]
+konstant = [500, 30000]
+res = minimize(doelfunksie, inset, method='nelder-mead', 
+               args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
+print(f"{konstant[1] :^10}{konstant[0] :^10}{res.x[0]:7.3f}{res.x[1]:8.2f}{res.x[2]*180/3.14159:8.2f}")
+
+#%%
+# %%
+# Beheer 'n reghoek met die heihoek of theta
+from math import sin
+
+# Beginvoorwaardes van simulasie
+# x = [VT, ALPHA, THETA, Q, H, Distance]
+x0 = [500, 0.58*3.14159/180, 0.58*3.14159/180, 0, 0, 0]
+throttle = 0.293
+elev = 2.46
+# Integration time step in milliseconds
+dt = 10
+# Lengte van vliegtuig projeksie
+vlieglengte = 200
+
+# import pygame module in this program 
+import pygame 
+
+# activate the pygame library . 
+# initiate pygame and give permission 
+# to use pygame's functionality. 
+pygame.init() 
+
+# create the display surface object 
+# of specific dimension..e(500, 500). 
+win = pygame.display.set_mode((500, 500)) 
+
+# set the pygame window name 
+pygame.display.set_caption("Vliegtuig heihoek") 
+
+# object current co-ordinates 
+x = 100
+y = 250
+
+# dimensions of the object 
+width = 300
+height = 5
+
+# velocity / speed of change of control elevator
+vel = 0.1
+
+# Indicates pygame is running 
+run = True
+
+# create a font object.
+# 1st parameter is the font file
+# which is present in pygame.
+# 2nd parameter is size of the font
+font = pygame.font.Font('freesansbold.ttf', 16)
+
+# create a text surface object,
+# on which text is drawn on it.
+text = font.render(f"{x0[0]:10.2f}", True, (255,255,255))
+ 
+# create a rectangular object for the
+# text surface object
+textRect = text.get_rect()
+ 
+# set the center of the rectangular object.
+textRect.center = (150, 150)
+
+
+# infinite loop 
+while run: 
+	# f(x, t, v, land, THTL, ELEV)
+	xd = f(x0, 0, vliegtuig, False, throttle, elev)
+	xint = [i * (dt/1000) for i in xd]
+	x0 = [x + y for x, y in zip(x0, xint)]
+	# creates time delay of 10ms 
+	pygame.time.delay(dt) 
+	    
+
+	# iterate over the list of Event objects 
+	# that was returned by pygame.event.get() method. 
+	for event in pygame.event.get(): 
+		
+		# if event object type is QUIT 
+		# then quitting the pygame 
+		# and program both. 
+		if event.type == pygame.QUIT: 
+			
+			# it will make exit the while loop 
+			run = False
+	# stores keys pressed 
+	keys = pygame.key.get_pressed() 
+	
+	# if left arrow key is pressed 
+	if keys[pygame.K_LEFT] and x>0: 
+		
+		# decrement in x co-ordinate 
+		x -= vel 
+		
+	# if left arrow key is pressed 
+	if keys[pygame.K_RIGHT] and x<500-width: 
+		
+		# increment in x co-ordinate 
+		x += vel 
+		
+	# if left arrow key is pressed 
+	if keys[pygame.K_UP] and y>0: 
+		
+		# decrement in y co-ordinate 
+		elev -= vel 
+		
+	# if left arrow key is pressed 
+	if keys[pygame.K_DOWN] and y<500-height: 
+		# increment in y co-ordinate 
+		elev += vel 
+		
+			
+	# completely fill the surface object 
+	# with black colour 
+	win.fill((0, 0, 0)) 
+	
+	# drawing object on screen which is rectangle here 
+	pygame.draw.rect(win, (255, 0, 0), (100, y + vlieglengte*sin(x0[2]), width, height)) 
+	text = font.render(f"{x0[0]:10.2f}", True, (255,255,255))
+	win.blit(text, textRect)
+	# it refreshes the window 
+	pygame.display.update() 
+
+# closes the pygame window 
+pygame.quit() 
+
+
+    
+
+
+
+
 
 #%%
 # Voorbeeld integrasie
@@ -225,4 +409,162 @@ res = minimize(rosen_with_args, x0, method='nelder-mead',
                args=(0.5, 1.), options={'xatol': 1e-8, 'disp': True})
 
 print(res.x)
+# %%
+# Voorbeeld van pygame wat 'n reghoeg beheer
+# Die reghoe wys die toestand van die heihoek
+
+# import pygame module in this program 
+import pygame 
+
+# activate the pygame library . 
+# initiate pygame and give permission 
+# to use pygame's functionality. 
+pygame.init() 
+
+# create the display surface object 
+# of specific dimension..e(500, 500). 
+win = pygame.display.set_mode((500, 500)) 
+
+# set the pygame window name 
+pygame.display.set_caption("Moving rectangle") 
+
+# object current co-ordinates 
+x = 200
+y = 200
+
+# dimensions of the object 
+width = 300
+height = 5
+
+# velocity / speed of movement 
+vel = 10
+
+# Indicates pygame is running 
+run = True
+
+# infinite loop 
+while run: 
+	# creates time delay of 10ms 
+	pygame.time.delay(100) 
+	
+	# iterate over the list of Event objects 
+	# that was returned by pygame.event.get() method. 
+	for event in pygame.event.get(): 
+		
+		# if event object type is QUIT 
+		# then quitting the pygame 
+		# and program both. 
+		if event.type == pygame.QUIT: 
+			
+			# it will make exit the while loop 
+			run = False
+	# stores keys pressed 
+	keys = pygame.key.get_pressed() 
+	
+	# if left arrow key is pressed 
+	if keys[pygame.K_LEFT] and x>0: 
+		
+		# decrement in x co-ordinate 
+		x -= vel 
+		
+	# if left arrow key is pressed 
+	if keys[pygame.K_RIGHT] and x<500-width: 
+		
+		# increment in x co-ordinate 
+		x += vel 
+		
+	# if left arrow key is pressed 
+	if keys[pygame.K_UP] and y>0: 
+		
+		# decrement in y co-ordinate 
+		y -= vel 
+		
+	# if left arrow key is pressed 
+	if keys[pygame.K_DOWN] and y<500-height: 
+		# increment in y co-ordinate 
+		y += vel 
+		
+			
+	# completely fill the surface object 
+	# with black colour 
+	win.fill((0, 0, 0)) 
+	
+	# drawing object on screen which is rectangle here 
+	pygame.draw.rect(win, (255, 0, 0), (x, y, width, height)) 
+	
+	# it refreshes the window 
+	pygame.display.update() 
+
+# closes the pygame window 
+pygame.quit() 
+
+#%%
+import jax.numpy as jnp
+from jax import grad, jit, vmap
+from jax import random
+
+key = random.key(0)
+
+def sigmoid(x):
+    return 0.5 * (jnp.tanh(x / 2) + 1)
+
+# Outputs probability of a label being true.
+def predict(W, b, inputs):
+    return sigmoid(jnp.dot(inputs, W) + b)
+
+# Build a toy dataset.
+inputs = jnp.array([[0.52, 1.12,  0.77],
+                   [0.88, -1.08, 0.15],
+                   [0.52, 0.06, -1.30],
+                   [0.74, -2.49, 1.39]])
+targets = jnp.array([True, True, False, True])
+
+# Training loss is the negative log-likelihood of the training examples.
+def loss(W, b):
+    preds = predict(W, b, inputs)
+    label_probs = preds * targets + (1 - preds) * (1 - targets)
+    return -jnp.sum(jnp.log(label_probs))
+
+# Initialize random model coefficients
+key, W_key, b_key = random.split(key, 3)
+W = random.normal(W_key, (3,))
+b = random.normal(b_key, ())
+#%%
+# Bereken die numeriese Jakobiaan vir linearisasie met die
+# volgende funksies:
+# https://jax.readthedocs.io/en/latest/notebooks/autodiff_cookbook.html#jacobians-and-hessians-using-jacfwd-and-jacrev
+# Hierdie bereken die Jakobiaan van 'n funksie wat
+# opgestel is met jax.
+# Moet nou 'n funksie van die vliegtuigmodel opstel
+# en dit in 'n formaat sit wat jacfwd aanvaar.
+# Dan kan jakobiaan bereken word.
+
+
+from jax import jacfwd, jacrev
+
+# Isolate the function from the weight matrix to the predictions
+f = lambda W: predict(W, b, inputs)
+
+J = jacfwd(f)(W)
+print("jacfwd result, with shape", J.shape)
+print(J)
+
+J = jacrev(f)(W)
+print("jacrev result, with shape", J.shape)
+print(J)
+# %%
+# Hier is 'n eenvoudiger voorbeeld om jacfwd te gebruik:
+# Maak die vliegtuigfunksie dat dit 'n jax numpy array uitgee
+# en dan kan die Jakobiaan bereken word.
+# https://jax.readthedocs.io/en/latest/_autosummary/jax.jacfwd.html
+
+import jax
+import jax.numpy as jnp
+
+def f(x):
+     return jnp.asarray(
+           [x[0], 5*x[2], 4*x[1]**2 - 2*x[2], x[2] * jnp.sin(x[0])])
+
+print(jax.jacfwd(f)(jnp.array([1., 2., 3.])))
+
 # %%
