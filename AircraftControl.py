@@ -203,6 +203,7 @@ def doelfunksie(inset, vliegtuig, konstant):
 
     return doel
 
+
 #%%
 # Daar is 'n handberekening vir hierdie geval in
 # TransportAircraft.ods
@@ -238,7 +239,24 @@ res = minimize(doelfunksie, inset, method='nelder-mead',
                args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
 print(f"{konstant[1] :^10}{konstant[0] :^10}{res.x[0]:7.3f}{res.x[1]:8.2f}{res.x[2]*180/3.14159:8.2f}")
 
-#%%
+
+# %%
+# Plot simulasie tyd en werklike tyd saam 
+# Kyk of daar 'n verskil is
+# Dit blyk dat daar nie probleem is om intyds te loop nie
+# Processor	11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz   1.38 GHz
+# Installed RAM	32.0 GB (31.7 GB usable)
+
+
+plt.plot(ttemp, 'b', label='Simulasie tyd')
+plt.plot(ttick, 'g', label=r'Regte tyd')
+
+plt.legend(loc='best')
+plt.ylabel('tyd [milisekondes]')
+plt.grid()
+plt.show()
+
+
 # %%
 # Beheer 'n reghoek met die heihoek of theta
 from math import sin
@@ -290,15 +308,25 @@ font = pygame.font.Font('freesansbold.ttf', 16)
 
 # create a text surface object,
 # on which text is drawn on it.
-text = font.render(f"{x0[0]:10.2f}", True, (255,255,255))
- 
+text = font.render(f"{'True airspeed' : ^12}{x0[0]:^10.1f}{'ft/s' :<10}", True, (255,255,255)) 
 # create a rectangular object for the
 # text surface object
-textRect = text.get_rect()
- 
+textSpoed = text.get_rect()
 # set the center of the rectangular object.
-textRect.center = (150, 150)
+textSpoed.center = (150, 150)
+text = font.render(f"{'Theta' : ^12}{x0[2]*180/3.14159:^10.1f}{'deg' :<10}", True, (255,255,255))
+textTheta = text.get_rect()
+# set the center of the rectangular object.
+textTheta.center = (150, 180)
+text = font.render(f"{'Throttle' : ^12}{throttle:^10.3f}", True, (255,255,255))
+textThtl = text.get_rect()
+# set the center of the rectangular object.
+textThtl.center = (150, 210)
 
+
+# Tydelike tydstempel
+ttemp = [0]
+ttick = [0]
 
 # infinite loop 
 while run: 
@@ -307,9 +335,10 @@ while run:
 	xint = [i * (dt/1000) for i in xd]
 	x0 = [x + y for x, y in zip(x0, xint)]
 	# creates time delay of 10ms 
-	pygame.time.delay(dt) 
-	    
-
+	pygame.time.delay(dt)
+	# Neem die tyd op om te kyk of die simulasie intyds is
+	ttick = ttick + [pygame.time.get_ticks()]
+	ttemp = ttemp + [ttemp[-1] + dt]
 	# iterate over the list of Event objects 
 	# that was returned by pygame.event.get() method. 
 	for event in pygame.event.get(): 
@@ -340,22 +369,37 @@ while run:
 	if keys[pygame.K_UP] and y>0: 
 		
 		# decrement in y co-ordinate 
-		elev -= vel 
+		elev += vel 
 		
 	# if left arrow key is pressed 
 	if keys[pygame.K_DOWN] and y<500-height: 
 		# increment in y co-ordinate 
-		elev += vel 
+		elev -= vel 
 		
+    # if left arrow key is pressed 
+	if keys[pygame.K_9]: 
+		# increment in y co-ordinate 
+		throttle += 0.001
+		
+	if keys[pygame.K_3]: 
+		# increment in y co-ordinate 
+		throttle -= 0.001 
 			
 	# completely fill the surface object 
 	# with black colour 
 	win.fill((0, 0, 0)) 
 	
 	# drawing object on screen which is rectangle here 
-	pygame.draw.rect(win, (255, 0, 0), (100, y + vlieglengte*sin(x0[2]), width, height)) 
-	text = font.render(f"{x0[0]:10.2f}", True, (255,255,255))
-	win.blit(text, textRect)
+	pygame.draw.rect(win, (255, 0, 0), (100, y - vlieglengte*sin(x0[2]), width, height))
+	# Teken die verwysing van die heihoek
+	pygame.draw.rect(win, (0, 255, 0), (80, y, 20, 10))
+	pygame.draw.rect(win, (0, 255, 0), (400, y, 20, 10))
+	text = font.render(f"{'True airspeed' : ^12}{x0[0]:^10.1f}{'ft/s' :<10}", True, (255,255,255))
+	win.blit(text, textSpoed)
+	text = font.render(f"{'Theta' : ^12}{x0[2]*180/3.14159:^10.1f}{'deg' :<10}", True, (255,255,255))
+	win.blit(text, textTheta)
+	text = font.render(f"{'Throttle' : ^12}{throttle:^10.3f}", True, (255,255,255))	
+	win.blit(text, textThtl)
 	# it refreshes the window 
 	pygame.display.update() 
 
