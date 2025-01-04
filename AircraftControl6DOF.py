@@ -25,118 +25,6 @@ def adc(VT, ALT, AMACH):
 
     return QBAR
 
-
-#%%
-# 6DOF weergawe van die vlugsimulasie
-
-def f(x, t, v, land, THTL, EL, AIL, RDR, AMACH, XCG):
-    # Assign state & control variables
-    # x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
-    VT = x[0] # True airspeed (ft/s)
-    ALPHA = x[1]*v['RTOD']
-    BETA = x[2]*v['RTOD']
-    PHI = x[3]
-    THETA = x[4]
-    PSI = x[5]
-    P = x[6]
-    Q = x[7]
-    R = x[8]
-    ALT = x[11]
-    POW = x[12]
-    # Air data computer and engine model
-    # Bereken dinamiese druk
-    QBAR = adc(VT, ALT, AMACH)
-    CPOW = TGEAR(THTL)
-    xd = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] # Inisialiseer xd
-    xd[12] = PDOT(POW, CPOW)
-    T = THRUST(POW, ALT, AMACH)
-    # Look-up tables and component buildup
-    CXT = CX(ALPHA, EL)
-    CYT = CY(BETA, AIL, RDR)
-    CZT = CZ(ALPHA, BETA, EL)
-    DAIL = AIL/20.0
-    DRDR = RDR/30.0
-    CLT = CL(ALPHA, BETA) + DLDA(ALPHA, BETA)*DAIL + DLDR(ALPHA, BETA)*DRDR
-    CMT = CM(ALPHA, EL)
-    CNT = CN(ALPHA, BETA) + DNDA(ALPHA, BETA)*DAIL + DNDR(ALPHA, BETA)*DRDR
-    # Add damping derivatives:
-    TVT = 0.5/VT
-    B2V = v['B']*TVT
-    CQ = v['CBAR']*Q*TVT
-    D = DAMP(ALPHA)
-    CXT = CXT + CQ*D[0]
-    CYT = CYT + B2V*(D[1]*R + D[2]*P)
-    CZT = CZT + CQ*D[3]
-    CLT = CLT + B2V*(D[4]*R + D[5]*P)
-    CMT = CMT + CQ*D[6] + CZT*(v['XCGR'] - XCG)
-    CNT = CNT + B2V*(D[7]*R + D[8]*P) - CYT*(v['XCGR'] - XCG)*v['CBAR']/v['B']
-    # Get ready for state equations
-    CBTA = math.cos(x[2])
-    U = VT*math.cos(x[1])*CBTA
-    V = VT*math.sin(x[2])
-    W = VT*math.sin(x[1])*CBTA
-    STH = math.sin(THETA)
-    CTH = math.cos(THETA)
-    SPH = math.sin(PHI)
-    CPH = math.cos(PHI)
-    SPSI = math.sin(PSI)
-    CPSI = math.cos(PSI)
-    QS = QBAR*v['S']
-    QSB = QS*v['B']
-    RMQS = v['RM']*QS
-    GCTH = v['G']*CTH
-    QSPH = Q*SPH
-    AY = RMQS*CYT
-    AZ = RMQS*CZT
-    # Table 2.4-1 Flat earth body axes 6DOF equations, page 81
-    # Force equations
-    UDOT = R*V - Q*W - v['G']*STH + v['RM']*(QS*CXT + T)
-    VDOT = P*W - R*U + GCTH*SPH + AY
-    WDOT = Q*U - P*V + GCTH*CPH + AZ
-    DUM = (U*U + W*W)
-    xd[0] = (U*UDOT + V*VDOT + W*WDOT)/VT
-    xd[1] = (U*WDOT - W*UDOT)/DUM
-    xd[2] = (VT*VDOT - V*xd[0])*CBTA/DUM
-
-    #Kinematics
-    xd[3] = P + (STH/CTH)*(QSPH + R*CPH)
-    xd[4] = Q*CPH - R*SPH
-    xd[5] = (QSPH + R*CPH)/CTH
-    #Moment
-    xd[6] = (v['C2']*P + v['C1']*R + v['C4']*v['HE'])*Q + QSB*(v['C3']*CLT + v['C4']*CNT)
-    xd[7] = (v['C5']*P - v['C7']*v['HE'])*R + v['C6']*(R*R - P*P) + QS*v['CBAR']*v['C7']*CMT
-    xd[8] = (v['C8']*P - v['C2']*R + v['C9']*v['HE'])*Q + QSB*(v['C4']*CLT + v['C9']*CNT)
-
-    # Navigation
-    #
-    T1 = SPH*CPSI
-    T2 = CPH*STH
-    T3 = SPH*SPSI
-    S1 = CTH*CPSI
-    S2 = CTH*SPSI
-    S3 = T1*STH - CPH*SPSI
-    S4 = T3*STH + CPH*CPSI
-    S5 = SPH*CTH
-    S6 = T2*CPSI + T3
-    S7 = T2*SPSI - T1
-    S8 = CPH*CTH
-    #
-    xd[9] = U*S1 + V*S3 + W*S6 # North speed
-    xd[10] = U*S2 + V*S4 + W*S7 # East speed
-    xd[11] = U*STH - V*S5 - W*S8 # Vertical speed
-
-    AN = -AZ/v['G']
-    ALAT = AY/v['G']
-
-    return xd
-
-# f(x, t, v, land, THTL, ELEV, AIL, RDR, AMACH, XCG)
-# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
-# Table 3.3-2 F-16 Model test case, page 128
-x = [500.0, 0.5, -0.2, -1, 1, -1, 0.7, -0.8, 0.9, 1000, 900, 10000, 90]
-print(f(x, 0, vliegtuig, True, 0.9, 20.0, -15.0, -20.0, 0.0, 0.4))
-
-
 #%%
 # Computer model of an F-16
 
@@ -759,26 +647,140 @@ for teller in range(-10, 40):
 plt.plot(alphalist, dndrlist, 'b', label=r'$dndr$')
 
 
-
 #%%
+# 6DOF weergawe van die vlugsimulasie
+
+def f(x, t, v, THTL, EL, AIL, RDR, AMACH, XCG):
+    # Assign state & control variables
+    # x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
+    VT = x[0] # True airspeed (ft/s)
+    ALPHA = x[1]*v['RTOD']
+    BETA = x[2]*v['RTOD']
+    PHI = x[3]
+    THETA = x[4]
+    PSI = x[5]
+    P = x[6]
+    Q = x[7]
+    R = x[8]
+    ALT = x[11]
+    POW = x[12]
+    # Air data computer and engine model
+    # Bereken dinamiese druk
+    QBAR = adc(VT, ALT, AMACH)
+    CPOW = TGEAR(THTL)
+    xd = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] # Inisialiseer xd
+    xd[12] = PDOT(POW, CPOW)
+    T = THRUST(POW, ALT, AMACH)
+    # Look-up tables and component buildup
+    CXT = CX(ALPHA, EL)
+    CYT = CY(BETA, AIL, RDR)
+    CZT = CZ(ALPHA, BETA, EL)
+    DAIL = AIL/20.0
+    DRDR = RDR/30.0
+    CLT = CL(ALPHA, BETA) + DLDA(ALPHA, BETA)*DAIL + DLDR(ALPHA, BETA)*DRDR
+    CMT = CM(ALPHA, EL)
+    CNT = CN(ALPHA, BETA) + DNDA(ALPHA, BETA)*DAIL + DNDR(ALPHA, BETA)*DRDR
+    # Add damping derivatives:
+    TVT = 0.5/VT
+    B2V = v['B']*TVT
+    CQ = v['CBAR']*Q*TVT
+    D = DAMP(ALPHA)
+    CXT = CXT + CQ*D[0]
+    CYT = CYT + B2V*(D[1]*R + D[2]*P)
+    CZT = CZT + CQ*D[3]
+    CLT = CLT + B2V*(D[4]*R + D[5]*P)
+    CMT = CMT + CQ*D[6] + CZT*(v['XCGR'] - XCG)
+    CNT = CNT + B2V*(D[7]*R + D[8]*P) - CYT*(v['XCGR'] - XCG)*v['CBAR']/v['B']
+    # Get ready for state equations
+    CBTA = math.cos(x[2])
+    U = VT*math.cos(x[1])*CBTA
+    V = VT*math.sin(x[2])
+    W = VT*math.sin(x[1])*CBTA
+    STH = math.sin(THETA)
+    CTH = math.cos(THETA)
+    SPH = math.sin(PHI)
+    CPH = math.cos(PHI)
+    SPSI = math.sin(PSI)
+    CPSI = math.cos(PSI)
+    QS = QBAR*v['S']
+    QSB = QS*v['B']
+    RMQS = v['RM']*QS
+    GCTH = v['G']*CTH
+    QSPH = Q*SPH
+    AY = RMQS*CYT
+    AZ = RMQS*CZT
+    # Table 2.4-1 Flat earth body axes 6DOF equations, page 81
+    # Force equations
+    UDOT = R*V - Q*W - v['G']*STH + v['RM']*(QS*CXT + T)
+    VDOT = P*W - R*U + GCTH*SPH + AY
+    WDOT = Q*U - P*V + GCTH*CPH + AZ
+    DUM = (U*U + W*W)
+    xd[0] = (U*UDOT + V*VDOT + W*WDOT)/VT
+    xd[1] = (U*WDOT - W*UDOT)/DUM
+    xd[2] = (VT*VDOT - V*xd[0])*CBTA/DUM
+
+    #Kinematics
+    xd[3] = P + (STH/CTH)*(QSPH + R*CPH)
+    xd[4] = Q*CPH - R*SPH
+    xd[5] = (QSPH + R*CPH)/CTH
+    #Moment
+    xd[6] = (v['C2']*P + v['C1']*R + v['C4']*v['HE'])*Q + QSB*(v['C3']*CLT + v['C4']*CNT)
+    xd[7] = (v['C5']*P - v['C7']*v['HE'])*R + v['C6']*(R*R - P*P) + QS*v['CBAR']*v['C7']*CMT
+    xd[8] = (v['C8']*P - v['C2']*R + v['C9']*v['HE'])*Q + QSB*(v['C4']*CLT + v['C9']*CNT)
+
+    # Navigation
+    #
+    T1 = SPH*CPSI
+    T2 = CPH*STH
+    T3 = SPH*SPSI
+    S1 = CTH*CPSI
+    S2 = CTH*SPSI
+    S3 = T1*STH - CPH*SPSI
+    S4 = T3*STH + CPH*CPSI
+    S5 = SPH*CTH
+    S6 = T2*CPSI + T3
+    S7 = T2*SPSI - T1
+    S8 = CPH*CTH
+    #
+    xd[9] = U*S1 + V*S3 + W*S6 # North speed
+    xd[10] = U*S2 + V*S4 + W*S7 # East speed
+    xd[11] = U*STH - V*S5 - W*S8 # Vertical speed
+
+    AN = -AZ/v['G']
+    ALAT = AY/v['G']
+
+    return xd
+
+# f(x, t, v, THTL, ELEV, AIL, RDR, AMACH, XCG)
+# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
+# Table 3.3-2 F-16 Model test case, page 128
+x = [500.0, 0.5, -0.2, -1, 1, -1, 0.7, -0.8, 0.9, 1000, 900, 10000, 90]
+print(f(x, 0, vliegtuig, 0.9, 20.0, -15.0, -20.0, 0.0, 0.4))
+
+
+
+
+
+
 #%% Integreer funksie
 # Loop die funksie met Runge Kutta integrasie
-#x0 = [spoed, alpha, theta, heiversnelling, 
-# opwaartse spoed, horizontale spoed]
-x0 = [170, 22.1*3.14159/180, 22.1*3.14159/180, 0, 0, 0]
-throttle = 0.297
-elev = -25.7
+# f(x, t, v, THTL, ELEV, AIL, RDR, AMACH, XCG)
+# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
+# Table 3.3-2 F-16 Model test case, page 128
+x0 = [500.0, 0.5, -0.2, -1, 1, -1, 0.7, -0.8, 0.9, 1000, 900, 10000, 90]
+THTL = 0.9
+EL = 0.0
+AIL = 0.0
+RDR = 0.0
+AMACH = 0.0
+XCG = 0.4
+print(f(x0, 0, vliegtuig, 0.9, 20.0, -15.0, -20.0, 0.0, 0.4))
 
-x0 = [500, 0.58*3.14159/180, 0.58*3.14159/180, 0, 0, 0]
-throttle = 0.293
-elev = 2.46
-
-x0 = [500, 5.43*3.14159/180, 5.43*3.14159/180, 0, 30000, 0]
-throttle = 0.204
-elev = -4.1
 
 t = np.linspace(0, 10, 101)
-sol = odeint(f, x0, t, args=(vliegtuig, False, throttle, elev))
+# f(x, t, v, THTL, EL, AIL, RDR, AMACH, XCG):
+sol = odeint(f, x0, t, args=(vliegtuig, THTL, EL, AIL, RDR, AMACH, XCG))
+
 
 plt.plot(t, sol[:, 2]*180/3.14159, 'b', label=r'$\theta (t)$')
 plt.plot(t, sol[:, 1]*180/3.14159, 'g', label=r'$\alpha (t)$')
@@ -820,3 +822,8 @@ X2, Y2 = np.meshgrid(x2, y2)
 ax[1].pcolormesh(X2, Y2, Z2)
 
 plt.show()
+
+
+
+
+# %%
