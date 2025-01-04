@@ -157,7 +157,36 @@ vliegtuig = {'S' : 300.0,
              'RTOD' : 57.29578
              }
 
-#%%
+# Calculate the inertia constants
+# Equation 2.4-6, page 80
+Jx = vliegtuig['Jx']
+Jy = vliegtuig['Jy']
+Jz = vliegtuig['Jy']
+Jxy = vliegtuig['Jxy']
+Jxz = vliegtuig['Jxz']
+
+GAMMA = Jx*Jz - Jxz**2
+vliegtuig['C1'] = ((Jy - Jz)*Jz - Jxz**2)/GAMMA
+vliegtuig['C2'] = (Jx - Jy + Jz)*Jxz/GAMMA
+vliegtuig['C3'] = Jz/GAMMA
+vliegtuig['C4'] = Jxz/GAMMA
+vliegtuig['C5'] = (Jz - Jx)/Jy
+vliegtuig['C6'] = Jxz/Jy
+vliegtuig['C7'] = 1/Jy
+vliegtuig['C8'] = (Jx*(Jx - Jy) + Jxz**2)/GAMMA
+vliegtuig['C9'] = Jx/GAMMA
+
+print(f"{'c1 : '}{vliegtuig['C1']}")
+print(f"{'c2 : '}{vliegtuig['C2']}")
+print(f"{'c3 : '}{vliegtuig['C3']}")
+print(f"{'c4 : '}{vliegtuig['C4']}")
+print(f"{'c5 : '}{vliegtuig['C5']}")
+print(f"{'c6 : '}{vliegtuig['C6']}")
+print(f"{'c7 : '}{vliegtuig['C7']}")
+print(f"{'c8 : '}{vliegtuig['C8']}")
+print(f"{'c9 : '}{vliegtuig['C9']}")
+
+
 def TGEAR(THTL):
     if THTL <= 0.77:
         TGEAR = 64.94*THTL
@@ -207,36 +236,10 @@ print(PDOT(50, 20))
 print(TGEAR(0.95))
         
 
-#%%
-# Calculate the inertia constants
-# Equation 2.4-6, page 80
-Jx = vliegtuig['Jx']
-Jy = vliegtuig['Jy']
-Jz = vliegtuig['Jy']
-Jxy = vliegtuig['Jxy']
-Jxz = vliegtuig['Jxz']
 
-GAMMA = Jx*Jz - Jxz**2
-vliegtuig['C1'] = ((Jy - Jz)*Jz - Jxz**2)/GAMMA
-vliegtuig['C2'] = (Jx - Jy + Jz)*Jxz/GAMMA
-vliegtuig['C3'] = Jz/GAMMA
-vliegtuig['C4'] = Jxz/GAMMA
-vliegtuig['C5'] = (Jz - Jx)/Jy
-vliegtuig['C6'] = Jxz/Jy
-vliegtuig['C7'] = 1/Jy
-vliegtuig['C8'] = (Jx*(Jx - Jy) + Jxz**2)/GAMMA
-vliegtuig['C9'] = Jx/GAMMA
 
-print(f"{"c1 : "}{vliegtuig['C1']}")
-print(f"{"c2 : "}{vliegtuig['C2']}")
-print(f"{"c3 : "}{vliegtuig['C3']}")
-print(f"{"c4 : "}{vliegtuig['C4']}")
-print(f"{"c5 : "}{vliegtuig['C5']}")
-print(f"{"c6 : "}{vliegtuig['C6']}")
-print(f"{"c7 : "}{vliegtuig['C7']}")
-print(f"{"c8 : "}{vliegtuig['C8']}")
-print(f"{"c9 : "}{vliegtuig['C9']}")
-#%%
+
+
 def THRUST(POW, ALT, RMACH):
     # Engine thrust model
     A = [[1060.0, 670.0, 880.0, 1140.0, 1500.0, 1860.0],
@@ -291,7 +294,7 @@ def THRUST(POW, ALT, RMACH):
 
 print(THRUST(100, 0, 0.8))
 
-#%%
+
 def DAMP(ALPHA):
     # Various damping coefficients
     # D[0] -> CXq
@@ -342,7 +345,7 @@ plt.plot(alphalist, damplist, 'b', label=r'$Damp$')
 
 
 
-#%%
+
 def CX(ALPHA, EL):
     # x-axis aerodynamic force coefficients
     A = [[-0.099, -0.081, -0.081, -0.063, -0.025, 0.044, 0.097, 0.113, 0.145, 0.167, 0.174, 0.166],
@@ -392,14 +395,14 @@ for teller in range(-50, 80):
 
 plt.plot(alphalist, cxlist, 'r', label=r'$C_x 25^\circ$')
 
-#%% 
+ 
 def CY(BETA, AIL, RDR):
     # Sideforce coefficient
     CY = -0.02*BETA + 0.021*(AIL/20.0) + 0.086*(RDR/30.0)
 
     return CY
 
-#%%
+
 def CZ(ALPHA, BETA, EL):
     A = [0.770, 0.241, -0.100, -0.416, -0.731, -1.053, -1.366, -1.646, -1.917, -2.120, -2.248, -2.229]
 
@@ -426,7 +429,7 @@ for teller in range(-50, 80):
 
 plt.plot(alphalist, czlist, 'b', label=r'$C_z$')
 
-#%%
+
 def CM(ALPHA, EL):
     # pitching moment coefficient
     A = [[0.205, 0.168, 0.186, 0.196, 0.213, 0.251, 0.245, 0.238, 0.252, 0.231, 0.198, 0.192],
@@ -477,7 +480,7 @@ for teller in range(-20, 50):
 
 plt.plot(alphalist, cmlist, 'r', label=r'$C_M 25^\circ$')
 
-#%%
+
 
 def CL(ALPHA, BETA):
     # rolling moment coefficient
@@ -527,7 +530,6 @@ plt.plot(alphalist, cllist, 'b', label=r'$C_L$')
 
 
 
-#%%
 
 def CN(ALPHA, BETA):
     # yawing moment coefficient
@@ -573,7 +575,7 @@ for teller in range(-10, 40):
 
 plt.plot(alphalist, cnlist, 'b', label=r'$C_N$')
 
-#%%
+
 
 def DLDA(ALPHA, BETA):
     # rolling moment due to ailerons
@@ -621,7 +623,6 @@ plt.plot(alphalist, dldalist, 'b', label=r'$dLdail$')
 
 
 
-#%%
 
 def DLDR(ALPHA, BETA):
     # rolling moment due to rudder
@@ -667,7 +668,7 @@ for teller in range(-10, 40):
 
 plt.plot(alphalist, dldrlist, 'b', label=r'$dLdr$')
 
-#%%
+
 def DNDA(ALPHA, BETA):
     # yawing moment due to ailerons
     A = [[0.001, -0.027, -0.017, -0.013, -0.012, -0.016, 0.001, 0.017, 0.011, 0.017, 0.008, 0.016],
@@ -712,7 +713,7 @@ for teller in range(-10, 40):
 
 plt.plot(alphalist, dndalist, 'b', label=r'$dnda$')
 
-#%%
+
 def DNDR(ALPHA, BETA):
     # yawing moment due to rudder
     A = [[-0.018, -0.052 ,-0.052, -0.052, -0.054, -0.049, -0.059, -0.051, -0.030, -0.037, -0.026, -0.013],
@@ -756,6 +757,44 @@ for teller in range(-10, 40):
     dndrlist.append(DNDR(teller, 0))
 
 plt.plot(alphalist, dndrlist, 'b', label=r'$dndr$')
+
+
+
+#%%
+#%% Integreer funksie
+# Loop die funksie met Runge Kutta integrasie
+#x0 = [spoed, alpha, theta, heiversnelling, 
+# opwaartse spoed, horizontale spoed]
+x0 = [170, 22.1*3.14159/180, 22.1*3.14159/180, 0, 0, 0]
+throttle = 0.297
+elev = -25.7
+
+x0 = [500, 0.58*3.14159/180, 0.58*3.14159/180, 0, 0, 0]
+throttle = 0.293
+elev = 2.46
+
+x0 = [500, 5.43*3.14159/180, 5.43*3.14159/180, 0, 30000, 0]
+throttle = 0.204
+elev = -4.1
+
+t = np.linspace(0, 10, 101)
+sol = odeint(f, x0, t, args=(vliegtuig, False, throttle, elev))
+
+plt.plot(t, sol[:, 2]*180/3.14159, 'b', label=r'$\theta (t)$')
+plt.plot(t, sol[:, 1]*180/3.14159, 'g', label=r'$\alpha (t)$')
+
+plt.legend(loc='best')
+plt.xlabel('t')
+plt.grid()
+plt.show()
+
+plt.plot(t, sol[:, 0], 'b', label='V(t)')
+
+plt.legend(loc='best')
+plt.xlabel('t')
+plt.grid()
+plt.show()
+
 
 #%%
 # How to interpolate in 2D using numpy and scipy
