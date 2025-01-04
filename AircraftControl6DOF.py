@@ -2,6 +2,17 @@
 # Nota:
 # By invalshoeke alpha bo 250 grade hou die interpolasie op met werk.
 # Dalk is dit nie 'n probleem as gelykvlug reg is nie.  Maak net seker.
+# 
+# Dit mag dalk wees dat F-16 marginaal stabiel is en dit verduidelik waarom dit
+# so vinnig divergeer en moeilik is om te simuleer met integrasie algoritme
+# Die Euler integrasie is meer stabiel.  Dit word meer stabiel indien die swaartepunt
+# verander word.
+#
+# Skryf dalk die simpleks algoritme oor uit die handboek.  Dit is sodat dit vergelyk kan
+# word met python se algoritme.  Dalk is meer iterasies nodig om soortegelyke antwoorde te kry.
+# Dalk is dit ook nodig om beginwaardes tot meer betekenisvolle syfers te gee.
+# Veral met 'n stywe en marginaal stabiele stelsel soos F-16.
+
 
 
 #%%
@@ -130,9 +141,20 @@ def RTAU(DP):
 print(RTAU(26))
 print(PDOT(50, 20))
 print(TGEAR(0.95))
-        
 
+throttlefraction = []
+throttlevalue = []
+# Plot throttle gearing:
+for i in range(0,100):
+    throttlefraction.append(i/100)
+    throttlevalue.append(TGEAR(throttlefraction[i]))
 
+plt.plot(throttlefraction, throttlevalue, 'b', label='Throttle gearing')
+plt.legend(loc='best')
+plt.xlabel('Throttle fraction []')
+plt.ylabel('Throttle [%]')
+plt.grid()
+plt.show()
 
 
 
@@ -773,14 +795,6 @@ print(xd)
 # x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
 # # Table 3.3-2 F-16 Model test case, page 128
 
-THTL = 0.123
-EL = 1.71
-AIL = 0.0
-RDR = 0.0
-XCG = 0.4
-x0 = [350, -5.71*3.14159/180, 0, 0, -5.71*3.14159/180, 0, 0, 0, 0, 0, 0, 0, THTL*100]
-print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
-# Hierdie beginwaardes werk nog nie, ondersoek dit verder
 
 x0 = [500.0, 0.5, -0.2, -1.0, 1.0, -1.0, 0.7, -0.8, 0.9, 1000.0, 900.0, 10000.0, 90.0]
 THTL = 0.9
@@ -790,7 +804,26 @@ RDR = 0.0
 XCG = 0.4
 print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
 
-t = np.linspace(0, 0.2, 10000)
+THTL = 0.127
+EL = -1.1
+AIL = 0.0
+RDR = 0.0
+XCG = 0.35
+x0 = [350, -5.71*3.14159/180, 0, 0, -5.71*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
+print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
+# Hierdie beginwaardes werk nog nie, ondersoek dit verder
+# Die swaartepunt was verkeerd.  Dis moontlik dat hierdie stelsel marginaal of onstabiel is
+
+THTL = 0.107
+EL = 0.72
+AIL = 0.0
+RDR = 0.0
+XCG = 0.35
+x0 = [400, 4.0*3.14159/180, 0, 0, 4.0*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
+print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
+
+
+t = np.linspace(0, 2.0, 10000)
 # f(x, t, v, THTL, EL, AIL, RDR, XCG):
 sol = odeint(f, x0, t, args=(vliegtuig, THTL, EL, AIL, RDR, XCG))
 
@@ -822,19 +855,48 @@ RDR = 0.0
 XCG = 0.4
 print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
 
+THTL = 0.127
+EL = -1.15
+AIL = 0.0
+RDR = 0.0
+XCG = 0.4
+x0 = [350, -5.82*3.14159/180, 0, 0, -5.82*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
+print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
+
+THTL = 0.107
+EL = 0.72
+AIL = 0.0
+RDR = 0.0
+XCG = 0.35
+x0 = [400, 4.0*3.14159/180, 0, 0, 4.0*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
+print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
+
+
 thetaplot = [x0[4]]
+alphaplot = [x0[1]]
+tplot = [0]
 t = 0.0
 
-for teller in range(1, 2400):
+for teller in range(1, 5000):
     xd = f(x0, t, vliegtuig, THTL, EL, AIL, RDR, XCG)
     xint = [i * 0.001 for i in xd]
     x0 = [x + y for x, y in zip(x0, xint)]
-
-    thetaplot.append(x0[4])
+    
     t = t + 0.001
+    thetaplot.append(x0[4])
+    alphaplot.append(x0[1])
+    tplot.append(t)
+    
     
 thetaplotdeg = [i*180/3.14159 for i in thetaplot]
-plt.plot(thetaplotdeg, 'b', label=r'$\theta (t)$')
+alphaplotdeg = [i*180/3.14159 for i in alphaplot]
+plt.plot(tplot, thetaplotdeg, 'b', label=r'$\theta (t)$')
+plt.plot(tplot, alphaplotdeg, 'g', label=r'$\alpha (t)$')
+plt.legend(loc='best')
+plt.xlabel('Tyd [s]')
+plt.ylabel(r'$\theta$ [deg]')
+plt.grid()
+plt.show()
 
 #%%
 # Trimmer funksie
@@ -852,13 +914,14 @@ def doelfunksie(inset, vliegtuig, konstant):
     AIL = inset[3]
     RDR = inset[4]
     THTL = inset[0]
+    XCG = konstant[2]
 
     POW = TGEAR(THTL)
 
     x0 = [konstant[0], inset[2], inset[5], 0, inset[2], 0, 0, 0, 0, 0, 0, ALT, POW]
 
     # f(x0, t, vliegtuig, THTL, EL, AIL, RDR, XCG)
-    xd = f(x0, t, vliegtuig, THTL, EL, AIL, RDR, XCG)
+    xd = f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG)
 
     doel = xd[0]**2 + 100*xd[1]**2 + xd[2]**2 + 10*xd[6]**2 + xd[7]**2 + xd[8]**2
 
@@ -875,7 +938,7 @@ print(f"{'ft/s' :^10}{' ' :^10}{'deg' :^10}{'deg' :^10}")
 # inset = [throttle, elevator [deg], alpha [rad], aileron [deg], rudder [deg], beta [rad]]
 inset = [0.123, 0.52, -5.71*3.14159/180, 0, 0, 0]
 # konstant = [Spoed [ft/s], hoogte [ft]]
-konstant = [350, 0]
+konstant = [350, 0, 0.35]
 res = minimize(doelfunksie, inset, method='nelder-mead', 
                args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
 print(f"{konstant[0] :^10}{res.x[0]:7.3f}{res.x[2]*180/3.14159:8.2f}{res.x[1]:8.2f}")
@@ -887,7 +950,7 @@ smoorklep = []
 for spoedgetal in spoed:
     inset = [0.5, 0.0, 10*3.14159/180, 0, 0, 0]
     # konstant = [Spoed [ft/s], hoogte [ft]]
-    konstant = [spoedgetal, 0]
+    konstant = [spoedgetal, 0, 0.35]
     res = minimize(doelfunksie, inset, method='nelder-mead', 
                args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
     print(f"{konstant[0] :^10}{res.x[0]:7.3f}{res.x[2]*180/3.14159:8.2f}{res.x[1]:8.2f}")
