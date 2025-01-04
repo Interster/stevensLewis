@@ -1,4 +1,10 @@
 #%%
+# Nota:
+# By invalshoeke alpha bo 250 grade hou die interpolasie op met werk.
+# Dalk is dit nie 'n probleem as gelykvlug reg is nie.  Maak net seker.
+# Intussen, met gelykvlug, maak 'n begrensingsalgoritme vir die alpha.
+
+#%%
 import numpy as np
 import math as math
 from scipy.integrate import odeint
@@ -652,7 +658,7 @@ plt.plot(alphalist, dndrlist, 'b', label=r'$dndr$')
 
 def f(x, t, v, THTL, EL, AIL, RDR, AMACH, XCG):
     # Assign state & control variables
-    # x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
+    # x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
     VT = x[0] # True airspeed (ft/s)
     ALPHA = x[1]*v['RTOD']
     BETA = x[2]*v['RTOD']
@@ -668,7 +674,7 @@ def f(x, t, v, THTL, EL, AIL, RDR, AMACH, XCG):
     # Bereken dinamiese druk
     QBAR = adc(VT, ALT, AMACH)
     CPOW = TGEAR(THTL)
-    xd = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] # Inisialiseer xd
+    xd = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # Inisialiseer xd
     xd[12] = PDOT(POW, CPOW)
     T = THRUST(POW, ALT, AMACH)
     # Look-up tables and component buildup
@@ -755,18 +761,15 @@ def f(x, t, v, THTL, EL, AIL, RDR, AMACH, XCG):
 # x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
 # Table 3.3-2 F-16 Model test case, page 128
 x = [500.0, 0.5, -0.2, -1, 1, -1, 0.7, -0.8, 0.9, 1000, 900, 10000, 90]
-print(f(x, 0, vliegtuig, 0.9, 20.0, -15.0, -20.0, 0.0, 0.4))
-
-
-
-
+xd = f(x, 0, vliegtuig, 0.9, 20.0, -15.0, -20.0, 0.0, 0.4)
+print(xd)
 
 
 #%% Integreer funksie
 # Loop die funksie met Runge Kutta integrasie
 # f(x, t, v, THTL, ELEV, AIL, RDR, AMACH, XCG)
-# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
-# Table 3.3-2 F-16 Model test case, page 128
+# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
+# # Table 3.3-2 F-16 Model test case, page 128
 x0 = [500.0, 0.5, -0.2, -1, 1, -1, 0.7, -0.8, 0.9, 1000, 900, 10000, 90]
 THTL = 0.9
 EL = 0.0
@@ -777,12 +780,12 @@ XCG = 0.4
 print(f(x0, 0, vliegtuig, 0.9, 20.0, -15.0, -20.0, 0.0, 0.4))
 
 
-t = np.linspace(0, 10, 101)
+t = np.linspace(0, 2.45, 101)
 # f(x, t, v, THTL, EL, AIL, RDR, AMACH, XCG):
 sol = odeint(f, x0, t, args=(vliegtuig, THTL, EL, AIL, RDR, AMACH, XCG))
 
 
-plt.plot(t, sol[:, 2]*180/3.14159, 'b', label=r'$\theta (t)$')
+plt.plot(t, sol[:, 4]*180/3.14159, 'b', label=r'$\theta (t)$')
 plt.plot(t, sol[:, 1]*180/3.14159, 'g', label=r'$\alpha (t)$')
 
 plt.legend(loc='best')
@@ -796,6 +799,68 @@ plt.legend(loc='best')
 plt.xlabel('t')
 plt.grid()
 plt.show()
+
+
+#%% 
+# Euler integrasie
+# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
+x0 = [500.0, 0.5, -0.2, -1.0, 1.0, -1.0, 0.7, -0.8, 0.9, 1000.0, 900.0, 10000.0, 90.0]
+THTL = 0.9
+EL = 0.0
+AIL = 0.0
+RDR = 0.0
+AMACH = 0.0
+XCG = 0.4
+print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, AMACH, XCG))
+
+thetaplot = [x0[4]]
+t = 0.0
+
+for teller in range(1, 2400):
+    xd = f(x0, t, vliegtuig, THTL, EL, AIL, RDR, AMACH, XCG)
+    xint = [i * 0.001 for i in xd]
+    x0 = [x + y for x, y in zip(x0, xint)]
+
+    thetaplot.append(x0[4])
+    t = t + 0.001
+    
+thetaplotdeg = [i*180/3.14159 for i in thetaplot]
+plt.plot(thetaplotdeg, 'b', label=r'$\theta (t)$')
+
+#%%
+# Trimmer funksie
+# Los op die gelykvlug kondisies vir die vliegtuigmodel
+
+
+def doelfunksie(inset, vliegtuig, konstant):
+    # inset = [throttle, elevator, theta]
+    # konstant = [Spoed [ft/s], hoogte [ft]]
+    # x = [VT, ALPHA, THETA, Q, H, Distance]
+    # As ALPHA = THETA is dit gelykvlug, dus GAMMA = 0
+    x0 = [konstant[0], inset[2], inset[2], 0, konstant[1], 0]
+
+    # f(x, t, vliegtuig, land, THTL, ELEV)
+    xd = f(x0, 0, vliegtuig, False, inset[0], inset[1])
+
+    doel = xd[0]**2 + 100*xd[1]**2 + 10*xd[3]**2
+
+    return doel
+
+
+#%%
+
+# Druk opskrifte
+print(f"{'Altitude' :^10}{'Speed' :^10}{'Throttle' :^10}{'Elevator' :^10}{'Alpha' :^10}")
+print(f"{'ft' :^10}{'ft/s' :^10}{' ' :^10}{'deg' :^10}{'deg' :^10}")
+
+
+# inset = [throttle, elevator [deg], theta [rad]]
+inset = [0.297, -25.7, 22.1*3.14159/180]
+# konstant = [Spoed [ft/s], hoogte [ft]]
+konstant = [170, 0]
+res = minimize(doelfunksie, inset, method='nelder-mead', 
+               args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
+print(f"{konstant[1] :^10}{konstant[0] :^10}{res.x[0]:7.3f}{res.x[1]:8.2f}{res.x[2]*180/3.14159:8.2f}")
 
 
 #%%
