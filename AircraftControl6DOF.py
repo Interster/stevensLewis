@@ -12,6 +12,9 @@
 # word met python se algoritme.  Dalk is meer iterasies nodig om soortegelyke antwoorde te kry.
 # Dalk is dit ook nodig om beginwaardes tot meer betekenisvolle syfers te gee.
 # Veral met 'n stywe en marginaal stabiele stelsel soos F-16.
+#
+# 3D plot die rol en gier moment koeffisiente van die F-16 en vergelyk met die 
+# grafieke op bl. 272.  Gebruik die 3D plot voorbeeld heel onder.
 
 
 
@@ -999,3 +1002,26 @@ plt.show()
 
 
 # %%
+# Plot 3D voorbeeld
+
+# importing libraries
+#from mpl_toolkits import mplot3d
+
+# defining surface and axes
+x = np.outer(np.linspace(-2, 2, 10), np.ones(10))
+y = x.copy().T
+z = np.cos(x ** 2 + y ** 3)
+ 
+fig = plt.figure()
+ 
+# syntax for 3-D plotting
+ax = plt.axes(projection='3d')
+ 
+# syntax for plotting
+ax.plot_surface(x, y, z, cmap='viridis',\
+                edgecolor='green')
+ax.set_title('Surface plot example')
+plt.show()
+# %%
+
+
