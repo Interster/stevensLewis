@@ -265,7 +265,8 @@ from math import sin
 # x = [VT, ALPHA, THETA, Q, H, Distance]
 x0 = [500, 0.58*3.14159/180, 0.58*3.14159/180, 0, 0, 0]
 throttle = 0.293
-elev = 2.46
+trim = 2.46 # trim elevator angle
+elev = trim
 # Integration time step in milliseconds
 dt = 10
 # Lengte van vliegtuig projeksie
@@ -323,85 +324,129 @@ textThtl = text.get_rect()
 # set the center of the rectangular object.
 textThtl.center = (150, 210)
 
+joystickPitch = 0.0
+text = font.render(f"{'Joystick pitch' : ^12}{joystickPitch:^10.3f}", True, (255,255,255))
+textjoys = text.get_rect()
+# set the center of the rectangular object.
+textjoys.center = (150, 350)
+
+
 
 # Tydelike tydstempel
 ttemp = [0]
 ttick = [0]
 
+# This dict can be left as-is, since pygame will generate a
+# pygame.JOYDEVICEADDED event for every joystick connected
+# at the start of the program.
+joysticks = {}
+
+for joystick in joysticks.values():
+    jid = joystick.get_instance_id()
+
 # infinite loop 
-while run: 
-	# f(x, t, v, land, THTL, ELEV)
-	xd = f(x0, 0, vliegtuig, False, throttle, elev)
-	xint = [i * (dt/1000) for i in xd]
-	x0 = [x + y for x, y in zip(x0, xint)]
-	# creates time delay of 10ms 
-	pygame.time.delay(dt)
-	# Neem die tyd op om te kyk of die simulasie intyds is
-	ttick = ttick + [pygame.time.get_ticks()]
-	ttemp = ttemp + [ttemp[-1] + dt]
-	# iterate over the list of Event objects 
-	# that was returned by pygame.event.get() method. 
-	for event in pygame.event.get(): 
-		
-		# if event object type is QUIT 
-		# then quitting the pygame 
-		# and program both. 
-		if event.type == pygame.QUIT: 
-			
-			# it will make exit the while loop 
-			run = False
-	# stores keys pressed 
-	keys = pygame.key.get_pressed() 
-	
-	# if left arrow key is pressed 
-	if keys[pygame.K_LEFT] and x>0: 
-		
-		# decrement in x co-ordinate 
-		x -= vel 
-		
-	# if left arrow key is pressed 
-	if keys[pygame.K_RIGHT] and x<500-width: 
-		
-		# increment in x co-ordinate 
-		x += vel 
-		
-	# if left arrow key is pressed 
-	if keys[pygame.K_UP] and y>0: 
-		
-		# decrement in y co-ordinate 
-		elev += vel 
-		
-	# if left arrow key is pressed 
-	if keys[pygame.K_DOWN] and y<500-height: 
-		# increment in y co-ordinate 
-		elev -= vel 
-		
+while run:
+    for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True  # Flag that we are done so we exit this loop.
+
+            if event.type == pygame.JOYBUTTONDOWN:
+                print("Joystick button pressed.")
+                if event.button == 0:
+                    joystick = joysticks[event.instance_id]
+                    if joystick.rumble(0, 0.7, 500):
+                        print(f"Rumble effect played on joystick {event.instance_id}")
+
+            if event.type == pygame.JOYBUTTONUP:
+                print("Joystick button released.")
+
+            # Handle hotplugging
+            if event.type == pygame.JOYDEVICEADDED:
+                # This event will be generated when the program starts for every
+                # joystick, filling up the list without needing to create them manually.
+                joy = pygame.joystick.Joystick(event.device_index)
+                joysticks[joy.get_instance_id()] = joy
+                print(f"Joystick {joy.get_instance_id()} connencted")
+
+            if event.type == pygame.JOYDEVICEREMOVED:
+                del joysticks[event.instance_id]
+                print(f"Joystick {event.instance_id} disconnected")
+    # f(x, t, v, land, THTL, ELEV)
+    xd = f(x0, 0, vliegtuig, False, throttle, elev)
+    xint = [i * (dt/1000) for i in xd]
+    x0 = [x + y for x, y in zip(x0, xint)]
+    # creates time delay of 10ms 
+    pygame.time.delay(dt)
+    # Neem die tyd op om te kyk of die simulasie intyds is
+    ttick = ttick + [pygame.time.get_ticks()]
+    ttemp = ttemp + [ttemp[-1] + dt]
+    # iterate over the list of Event objects 
+    # that was returned by pygame.event.get() method. 
+    for event in pygame.event.get(): 
+        # if event object type is QUIT 
+        # then quitting the pygame 
+        # and program both. 
+       if event.type == pygame.QUIT: 
+            # it will make exit the while loop 
+            run = False
+    # stores keys pressed 
+    keys = pygame.key.get_pressed()
+
     # if left arrow key is pressed 
-	if keys[pygame.K_9]: 
-		# increment in y co-ordinate 
-		throttle += 0.001
-		
-	if keys[pygame.K_3]: 
-		# increment in y co-ordinate 
-		throttle -= 0.001 
-			
-	# completely fill the surface object 
-	# with black colour 
-	win.fill((0, 0, 0)) 
-	
-	# drawing object on screen which is rectangle here 
-	pygame.draw.rect(win, (255, 0, 0), (100, y - vlieglengte*sin(x0[2]), width, height))
-	# Teken die verwysing van die heihoek
-	pygame.draw.rect(win, (0, 255, 0), (80, y, 20, 10))
-	pygame.draw.rect(win, (0, 255, 0), (400, y, 20, 10))
-	text = font.render(f"{'True airspeed' : ^12}{x0[0]:^10.1f}{'ft/s' :<10}", True, (255,255,255))
-	win.blit(text, textSpoed)
-	text = font.render(f"{'Theta' : ^12}{x0[2]*180/3.14159:^10.1f}{'deg' :<10}", True, (255,255,255))
-	win.blit(text, textTheta)
-	text = font.render(f"{'Throttle' : ^12}{throttle:^10.3f}", True, (255,255,255))	
-	win.blit(text, textThtl)
-	# it refreshes the window 
-	pygame.display.update() 
+    if keys[pygame.K_LEFT] and x>0:
+        # decrement in x co-ordinate
+        x -= vel 
+    # if left arrow key is pressed 
+    if keys[pygame.K_RIGHT] and x<500-width: 
+        
+        # increment in x co-ordinate 
+        x += vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_UP] and y>0: 
+        
+        # decrement in y co-ordinate 
+        trim += vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_DOWN] and y<500-height: 
+        # increment in y co-ordinate 
+        trim -= vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_9]: 
+        # increment in y co-ordinate 
+        throttle += 0.001
+        
+    if keys[pygame.K_3]: 
+        # increment in y co-ordinate 
+        throttle -= 0.001 
+            
+    # completely fill the surface object 
+    # with black colour 
+    win.fill((0, 0, 0))
+    
+    # drawing object on screen which is rectangle here 
+    pygame.draw.rect(win, (255, 0, 0), (100, y - vlieglengte*sin(x0[2]), width, height))
+    # Teken die verwysing van die heihoek
+    pygame.draw.rect(win, (0, 255, 0), (80, y, 20, 10))
+    pygame.draw.rect(win, (0, 255, 0), (400, y, 20, 10))
+    text = font.render(f"{'True airspeed' : ^12}{x0[0]:^10.1f}{'ft/s' :<10}", True, (255,255,255))
+    win.blit(text, textSpoed)
+    text = font.render(f"{'Theta' : ^12}{x0[2]*180/3.14159:^10.1f}{'deg' :<10}", True, (255,255,255))
+    win.blit(text, textTheta)
+    text = font.render(f"{'Throttle' : ^12}{throttle:^10.3f}", True, (255,255,255))    
+    win.blit(text, textThtl)
+    for joystick in joysticks.values():
+        jid = joystick.get_instance_id()
+        joystickPitch = joystick.get_axis(1)
+    text = font.render(f"{'Joystick' : ^12}{joystickPitch:^10.3f}", True, (255,255,255))
+    win.blit(text, textjoys)
+    elev = trim - joystickPitch*25
+    pygame.display.update()
+
+     
+ 
 
 # closes the pygame window 
 pygame.quit() 
@@ -488,56 +533,56 @@ run = True
 
 # infinite loop 
 while run: 
-	# creates time delay of 10ms 
-	pygame.time.delay(100) 
-	
-	# iterate over the list of Event objects 
-	# that was returned by pygame.event.get() method. 
-	for event in pygame.event.get(): 
-		
-		# if event object type is QUIT 
-		# then quitting the pygame 
-		# and program both. 
-		if event.type == pygame.QUIT: 
-			
-			# it will make exit the while loop 
-			run = False
-	# stores keys pressed 
-	keys = pygame.key.get_pressed() 
-	
-	# if left arrow key is pressed 
-	if keys[pygame.K_LEFT] and x>0: 
-		
-		# decrement in x co-ordinate 
-		x -= vel 
-		
-	# if left arrow key is pressed 
-	if keys[pygame.K_RIGHT] and x<500-width: 
-		
-		# increment in x co-ordinate 
-		x += vel 
-		
-	# if left arrow key is pressed 
-	if keys[pygame.K_UP] and y>0: 
-		
-		# decrement in y co-ordinate 
-		y -= vel 
-		
-	# if left arrow key is pressed 
-	if keys[pygame.K_DOWN] and y<500-height: 
-		# increment in y co-ordinate 
-		y += vel 
-		
-			
-	# completely fill the surface object 
-	# with black colour 
-	win.fill((0, 0, 0)) 
-	
-	# drawing object on screen which is rectangle here 
-	pygame.draw.rect(win, (255, 0, 0), (x, y, width, height)) 
-	
-	# it refreshes the window 
-	pygame.display.update() 
+    # creates time delay of 10ms 
+    pygame.time.delay(100) 
+    
+    # iterate over the list of Event objects 
+    # that was returned by pygame.event.get() method. 
+    for event in pygame.event.get(): 
+        
+        # if event object type is QUIT 
+        # then quitting the pygame 
+        # and program both. 
+        if event.type == pygame.QUIT: 
+            
+            # it will make exit the while loop 
+            run = False
+    # stores keys pressed 
+    keys = pygame.key.get_pressed() 
+    
+    # if left arrow key is pressed 
+    if keys[pygame.K_LEFT] and x>0: 
+        
+        # decrement in x co-ordinate 
+        x -= vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_RIGHT] and x<500-width: 
+        
+        # increment in x co-ordinate 
+        x += vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_UP] and y>0: 
+        
+        # decrement in y co-ordinate 
+        y -= vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_DOWN] and y<500-height: 
+        # increment in y co-ordinate 
+        y += vel 
+        
+            
+    # completely fill the surface object 
+    # with black colour 
+    win.fill((0, 0, 0)) 
+    
+    # drawing object on screen which is rectangle here 
+    pygame.draw.rect(win, (255, 0, 0), (x, y, width, height)) 
+    
+    # it refreshes the window 
+    pygame.display.update() 
 
 # closes the pygame window 
 pygame.quit() 
