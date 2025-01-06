@@ -761,6 +761,14 @@ def f(x, t, v, THTL, EL, AIL, RDR, XCG):
     xd[7] = (v['C5']*P - v['C7']*v['HE'])*R + v['C6']*(R*R - P*P) + QS*v['CBAR']*v['C7']*CMT
     xd[8] = (v['C8']*P - v['C2']*R + v['C9']*v['HE'])*Q + QSB*(v['C4']*CLT + v['C9']*CNT)
 
+    # Longitudinale vergelykings alleenlik:
+    # Stel al die rol en gier momente en tempos na nul
+    #xd[3] = 0
+    #xd[5] = 0
+    #xd[6] = 0
+    #xd[8] = 0
+
+
     # Navigation
     #
     T1 = SPH*CPSI
@@ -900,6 +908,213 @@ plt.xlabel('Tyd [s]')
 plt.ylabel(r'$\theta$ [deg]')
 plt.grid()
 plt.show()
+
+#%%
+
+# Beheer 'n reghoek met die heihoek of theta
+from math import sin
+
+# Beginvoorwaardes van simulasie
+THTL = 0.107
+trim = 0.72 # trim elevator angle
+EL = trim
+AIL = 0.0
+RDR = 0.0
+XCG = 0.35
+# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
+x0 = [400, 4.0*3.14159/180, 0, 0, 4.0*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
+
+
+
+# Integration time step in milliseconds
+dt = 10
+# Lengte van vliegtuig projeksie
+vlieglengte = 200
+
+# import pygame module in this program 
+import pygame 
+
+# activate the pygame library . 
+# initiate pygame and give permission 
+# to use pygame's functionality. 
+pygame.init() 
+
+# create the display surface object 
+# of specific dimension..e(500, 500). 
+win = pygame.display.set_mode((500, 500)) 
+
+# set the pygame window name 
+pygame.display.set_caption("Vliegtuig heihoek") 
+
+# object current co-ordinates 
+x = 100
+y = 250
+
+# dimensions of the object 
+width = 300
+height = 5
+
+# velocity / speed of change of control elevator
+vel = 0.1
+
+# Indicates pygame is running 
+run = True
+
+# create a font object.
+# 1st parameter is the font file
+# which is present in pygame.
+# 2nd parameter is size of the font
+font = pygame.font.Font('freesansbold.ttf', 16)
+
+# create a text surface object,
+# on which text is drawn on it.
+text = font.render(f"{'True airspeed' : ^12}{x0[0]:^10.1f}{'ft/s' :<10}", True, (255,255,255)) 
+# create a rectangular object for the
+# text surface object
+textSpoed = text.get_rect()
+# set the center of the rectangular object.
+textSpoed.center = (150, 150)
+text = font.render(f"{'Theta' : ^12}{x0[2]*180/3.14159:^10.1f}{'deg' :<10}", True, (255,255,255))
+textTheta = text.get_rect()
+# set the center of the rectangular object.
+textTheta.center = (150, 180)
+text = font.render(f"{'Throttle' : ^12}{THTL:^10.3f}", True, (255,255,255))
+textThtl = text.get_rect()
+# set the center of the rectangular object.
+textThtl.center = (150, 210)
+
+joystickPitch = 0.0
+text = font.render(f"{'Joystick pitch' : ^12}{joystickPitch:^10.3f}", True, (255,255,255))
+textjoys = text.get_rect()
+# set the center of the rectangular object.
+textjoys.center = (150, 350)
+
+
+
+# Tydelike tydstempel
+ttemp = [0]
+ttick = [0]
+
+# This dict can be left as-is, since pygame will generate a
+# pygame.JOYDEVICEADDED event for every joystick connected
+# at the start of the program.
+joysticks = {}
+
+for joystick in joysticks.values():
+    jid = joystick.get_instance_id()
+
+# infinite loop 
+while run:
+    for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True  # Flag that we are done so we exit this loop.
+
+            if event.type == pygame.JOYBUTTONDOWN:
+                print("Joystick button pressed.")
+                if event.button == 0:
+                    joystick = joysticks[event.instance_id]
+                    if joystick.rumble(0, 0.7, 500):
+                        print(f"Rumble effect played on joystick {event.instance_id}")
+
+            if event.type == pygame.JOYBUTTONUP:
+                print("Joystick button released.")
+
+            # Handle hotplugging
+            if event.type == pygame.JOYDEVICEADDED:
+                # This event will be generated when the program starts for every
+                # joystick, filling up the list without needing to create them manually.
+                joy = pygame.joystick.Joystick(event.device_index)
+                joysticks[joy.get_instance_id()] = joy
+                print(f"Joystick {joy.get_instance_id()} connencted")
+
+            if event.type == pygame.JOYDEVICEREMOVED:
+                del joysticks[event.instance_id]
+                print(f"Joystick {event.instance_id} disconnected")
+    # x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
+    xd = f(x0, t, vliegtuig, THTL, EL, AIL, RDR, XCG)
+    
+    xint = [i * (dt/1000) for i in xd]
+    x0 = [x + y for x, y in zip(x0, xint)]
+    # creates time delay of 10ms 
+    pygame.time.delay(dt)
+    # Neem die tyd op om te kyk of die simulasie intyds is
+    ttick = ttick + [pygame.time.get_ticks()]
+    ttemp = ttemp + [ttemp[-1] + dt]
+    # iterate over the list of Event objects 
+    # that was returned by pygame.event.get() method. 
+    for event in pygame.event.get(): 
+        # if event object type is QUIT 
+        # then quitting the pygame 
+        # and program both. 
+       if event.type == pygame.QUIT: 
+            # it will make exit the while loop 
+            run = False
+    # stores keys pressed 
+    keys = pygame.key.get_pressed()
+
+    # if left arrow key is pressed 
+    if keys[pygame.K_LEFT] and x>0:
+        # decrement in x co-ordinate
+        x -= vel 
+    # if left arrow key is pressed 
+    if keys[pygame.K_RIGHT] and x<500-width: 
+        
+        # increment in x co-ordinate 
+        x += vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_UP] and y>0: 
+        
+        # decrement in y co-ordinate 
+        trim += vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_DOWN] and y<500-height: 
+        # increment in y co-ordinate 
+        trim -= vel 
+        
+    # if left arrow key is pressed 
+    if keys[pygame.K_9]: 
+        # increment in y co-ordinate 
+        THTL += 0.001
+        
+    if keys[pygame.K_3]: 
+        # increment in y co-ordinate 
+        THTL -= 0.001 
+            
+    # completely fill the surface object 
+    # with black colour 
+    win.fill((0, 0, 0))
+    
+    # drawing object on screen which is rectangle here 
+    pygame.draw.rect(win, (255, 0, 0), (100, y - vlieglengte*sin(x0[4]), width, height))
+    # Teken die verwysing van die heihoek
+    pygame.draw.rect(win, (0, 255, 0), (80, y, 20, 10))
+    pygame.draw.rect(win, (0, 255, 0), (400, y, 20, 10))
+    text = font.render(f"{'True airspeed' : ^12}{x0[0]:^10.1f}{'ft/s' :<10}", True, (255,255,255))
+    win.blit(text, textSpoed)
+    text = font.render(f"{'Theta' : ^12}{x0[4]*180/3.14159:^10.1f}{'deg' :<10}", True, (255,255,255))
+    win.blit(text, textTheta)
+    text = font.render(f"{'Throttle' : ^12}{THTL:^10.3f}", True, (255,255,255))    
+    win.blit(text, textThtl)
+    for joystick in joysticks.values():
+        jid = joystick.get_instance_id()
+        joystickPitch = joystick.get_axis(1)
+    text = font.render(f"{'Joystick' : ^12}{joystickPitch:^10.3f}", True, (255,255,255))
+    win.blit(text, textjoys)
+    EL = trim - joystickPitch*25
+    pygame.display.update()
+
+     
+ 
+
+# closes the pygame window 
+pygame.quit() 
+
+
+    
+
+
 
 #%%
 # Trimmer funksie
