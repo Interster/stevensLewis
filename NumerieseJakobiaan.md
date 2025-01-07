@@ -73,6 +73,12 @@ waar $l$ die lengte van die pendulum is en $m$ die massa is.
 
 waar $\dot{x_1} = \dot{\theta}$ en $\dot{x_2} = \ddot{\theta}$ en $\theta$ is die hoek van die pendulum tou met betrekking tot die vertikale as.
 
+Die krag $F$ op die pendulum word gelyk gestel aan:
+$$
+F = u^2
+$$
+om latere differensiasie te vergemaklik.  Dit is hoe die bewegingsvergelyking hierbo bepaal word.
+
 Die simboliese evaluering van die Jakobiaan van hierdie stelsel is as volg:
 $$
 \frac{\partial \mathbf{f}}{\partial \mathbf{x}} = 
@@ -99,5 +105,32 @@ $$
 \begin{bmatrix}
 0 & 1 \\
 -3.27 & 0 \\
-\end{bmatrix}
+\end{bmatrix}
 $$
+
+Die Jakobiaan matriks met betrekking tot die beheervektor $\mathbf{u}$ kan as volg bepaal word:
+
+Onthou dat daar net een beheer inset is dus is $\mathbf{u} = u_1 = u$:
+$$
+\frac{\partial \mathbf{f}}{\partial \mathbf{u}} = 
+\begin{bmatrix}
+\frac{\partial f_1}{\partial u} \\
+\frac{\partial f_2}{\partial u}
+\end{bmatrix}
+=
+\begin{bmatrix}
+0 \\
+\frac{2}{ml} u \\
+\end{bmatrix}
+=
+\begin{bmatrix}
+0 \\
+\frac{2}{ml} \sqrt F \\
+\end{bmatrix} = 
+\begin{bmatrix}
+0 \\
+\frac{2}{(0.1kg)(3m)} \sqrt F \\
+\end{bmatrix}
+$$
+
+

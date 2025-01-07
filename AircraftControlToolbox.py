@@ -114,6 +114,7 @@ def numJakob(f, t, u0, x0):
     # unpack the values of 2D list
     # and then zip function will 
     # pack them again in opposite manner
+    # Transponeer die matriks
     Jakobiaan = list(map(list, zip(*Jakobiaant)))
 
     return Jakobiaan
