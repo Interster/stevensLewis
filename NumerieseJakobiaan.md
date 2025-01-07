@@ -133,4 +133,14 @@ $$
 \end{bmatrix}
 $$
 
+Vir $F = 0.5N$: 
+$$
+\frac{\partial \mathbf{f}}{\partial \mathbf{u}} = 
+\begin{bmatrix}
+0 \\
+\frac{2}{(0.1kg)(3m)} \sqrt{0.5} \\
+\end{bmatrix} 
+=
+4.71
+$$
 

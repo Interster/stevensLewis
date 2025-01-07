@@ -63,16 +63,23 @@ def numJakob(f, t, u0, x0):
     # 'n LTI stelsel is nie afhanklik van tyd nie, dus hou t = 0 arbriter
     t = 0
     
-    def njvek(f, t, u0, x0, dx, ni):
+    def njvek(f, t, u0, x0, dx, ni, tipe):
+        # Bereken numeriese Jakobiaan vektor
         # Bepaal 'n toestandsveranderlike vektor van die funksie
         # ni is die nommer van die veranderlike wat versteur word
         # dx is die waarde waarmee die veranderlike versteur word
+        # tipe is 'A' of 'B' en dui die stelsel of inset Jakobiaan aan
 
         xd0 = f(x0, t, u0) # vektor by gestadigde toestand
         x1 = [item for item in x0] # Inisialiseer die tweede vektor by versteurde toestand
+        u1 = [item for item in u0] # Inisialiseer die tweede vektor by versteurde toestand
         
-        x1[ni] += dx
-        xd1 = f(x1, t, u0)
+        if tipe == 'A':
+            x1[ni] += dx
+            xd1 = f(x1, t, u0)
+        elif tipe == 'B':
+            u1[ni] += dx
+            xd1 = f(x0, t, u1)
 
         njvek = []
         # Bereken die gradient vir elke veranderlike
@@ -81,7 +88,7 @@ def numJakob(f, t, u0, x0):
         
         return njvek
 
-    def njvekkonv(f, t, u0, x0, ni):
+    def njvekkonv(f, t, u0, x0, ni, tipe):
         # Konvergeer die Jakobiaan vektor totdat minder as 0.1% 
         # verandering in die grootste verandering gebeur het.
             
@@ -89,9 +96,9 @@ def numJakob(f, t, u0, x0):
         tolcheck = 1
 
         while tolcheck > 0.0001:
-            njvek0 = njvek(f, t, u0, x0, dx, ni)
+            njvek0 = njvek(f, t, u0, x0, dx, ni, tipe)
             dx = dx/2
-            njvek1 = njvek(f, t, u0, x0, dx, ni)
+            njvek1 = njvek(f, t, u0, x0, dx, ni, tipe)
 
             tolerance = []
 
@@ -105,32 +112,45 @@ def numJakob(f, t, u0, x0):
 
         return njvekkonv
     
+    # Bereken stelsel Jakobiaan
     Jakobiaant = []
     
     for ni in range(0, len(x0)):
-        Jakobiaant.append(njvekkonv(f, t, u0, x0, ni))
+        Jakobiaant.append(njvekkonv(f, t, u0, x0, ni, 'A'))
 
     # star operator will first
     # unpack the values of 2D list
     # and then zip function will 
     # pack them again in opposite manner
     # Transponeer die matriks
-    Jakobiaan = list(map(list, zip(*Jakobiaant)))
+    JakobiaanA = list(map(list, zip(*Jakobiaant)))
+    
+    # Bereken inset Jakobiaan
+    Jakobiaant = []
 
-    return Jakobiaan
+    for ni in range(0, len(u0)):
+        Jakobiaant.append(njvekkonv(f, t, u0, x0, ni, 'B'))
+
+    # Transponeer die matriks
+    JakobiaanB = list(map(list, zip(*Jakobiaant)))
+
+    return JakobiaanA, JakobiaanB
 
 
 f = pendulum
-u0 = [0]
+u0 = [(0.5)**0.5]
 x0 = [0, 0]
 print('Numeriese berekening van Jakobiaan')
 print(numJakob(f, 0, u0, x0))
 
 regtewaarde = [[0, 1], [-9.81/3, 0]]
-print(f"{'Analitiese waarde van Jakobiaan '}{regtewaarde}")
+print(f"{'Analitiese waarde van Jakobiaan A'}{regtewaarde}")
 print('Hier is die eiewaardes en eievektore')
 eiewaardes, eievektore = np.linalg.eig(np.array(regtewaarde))
 print(eiewaardes)
+regtewaarde = [[0], [(2/(0.1*3)) *(0.5)**0.5]]
+print(f"{'Analitiese waarde van Jakobiaan B vir F = 0.5'}{regtewaarde}")
+
 
 #%%
 
