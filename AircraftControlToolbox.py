@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import math as math
 import numpy as np
-
+import pygame 
 
 #%%
 def rk4(f, dt, xx, nx, u):
@@ -43,6 +43,93 @@ def rk4(f, dt, xx, nx, u):
         xx[m] = xx[m] + (xa[m] + xd[m]*dt)/6.0
 
     return xx
+
+#%%
+# Nie-lineere toestandsveranderlike stelsel wat 'n pendulum beskryf
+# Hierdie stelsel word gebruik om die numeriese Jakobiaan funksie te ontfout
+
+def pendulum(x, t, u):
+    l = 3 # [m]
+    m = 0.1 # [kg]
+
+    xd = [0, 0]
+
+    xd[0] = x[1]
+    xd[1] = -(9.81/l)*math.sin(x[0]) + (1/(l*m)*u[0]**2)
+
+    return xd
+
+
+def voorbeeldIntegrasiePendulum():
+    # voorbeeld van die pendulum se toestandsveranderlike vektor:
+    # Rondom die ekwilibrium punt
+    print(pendulum([0, 0], 0, [0]))
+
+    dt = 0.01 # sekondes
+    tydvektor = [i*dt for i in range(0, 1001)]
+    afstand = [0]
+
+    # Beginwaardes
+    x0 = [0.05, 0]
+    xx =[]
+    u = [0.5]
+
+    for tyd in tydvektor:
+        xx = rk4(pendulum, dt, x0, len(x0), u)
+        afstand.append(xx[0]*180/3.14159)
+        
+
+    plt.plot(tydvektor, afstand[0:-1], 'b', label=r'$\theta$')
+
+    plt.legend(loc='best')
+    plt.xlabel('t [s]')
+    plt.ylabel('Hoek [grade]')
+    plt.grid()
+    plt.show()
+
+
+#%%
+
+def puntmassa(x, t, u):
+    # Bereken die posisie van 'n puntmassa, gegewe die beginsnelheid
+    # en die versnelling.  Die versnelling in hierdie geval is 
+    # swaartekrag op aarde, naamlik 9.81m/s^2
+    #
+    # s = ut + 0.5at^2
+    # v = u + at
+    # 
+    a = 9.81 # Gravitasieversnelling [m/s^2]
+    xd = [x[1], 9.81]
+    return xd
+
+
+def voorbeeldIntegrasiePuntMassa():
+    # voorbeeld van die puntmassa se toestandsveranderlike vektor:
+    print(puntmassa([10, 10], 0, []))
+
+    dt = 0.01 # sekondes
+    tydvektor = [i*dt for i in range(0, 1001)]
+    afstand = [0]
+
+    # Beginwaardes
+    x0 = [0, 0]
+    xx =[]
+
+    for tyd in tydvektor:
+        xx = rk4(puntmassa, dt, x0, len(x0), [])
+        afstand.append(xx[0])
+        
+
+    plt.plot(tydvektor, afstand[0:-1], 'b', label=r's')
+
+    plt.legend(loc='best')
+    plt.xlabel('t [s]')
+    plt.ylabel('afstand [m]')
+    plt.grid()
+    plt.show()
+
+    print(f"{'Antwoord moet wees '}{0.5*9.81*(0.01*1000)**2}")
+    print(f"{'Antwoord moet is '}{afstand[-2]:3.8f}")
 
 
 
@@ -137,126 +224,38 @@ def numJakob(f, t, u0, x0):
     return JakobiaanA, JakobiaanB
 
 
-f = pendulum
-u0 = [(0.5)**0.5]
-x0 = [0, 0]
-print('Numeriese berekening van Jakobiaan')
-print(numJakob(f, 0, u0, x0))
+def voorbeeldJakobiaan():
+    f = pendulum
+    u0 = [(0.5)**0.5]
+    x0 = [0, 0]
+    print('Numeriese berekening van Jakobiaan')
+    print(numJakob(f, 0, u0, x0))
 
-regtewaarde = [[0, 1], [-9.81/3, 0]]
-print(f"{'Analitiese waarde van Jakobiaan A'}{regtewaarde}")
-print('Hier is die eiewaardes en eievektore')
-eiewaardes, eievektore = np.linalg.eig(np.array(regtewaarde))
-print(eiewaardes)
-regtewaarde = [[0], [(2/(0.1*3)) *(0.5)**0.5]]
-print(f"{'Analitiese waarde van Jakobiaan B vir F = 0.5'}{regtewaarde}")
-
-
-#%%
-
-def puntmassa(x, t, u):
-    # Bereken die posisie van 'n puntmassa, gegewe die beginsnelheid
-    # en die versnelling.  Die versnelling in hierdie geval is 
-    # swaartekrag op aarde, naamlik 9.81m/s^2
-    #
-    # s = ut + 0.5at^2
-    # v = u + at
-    # 
-    a = 9.81 # Gravitasieversnelling [m/s^2]
-    xd = [x[1], 9.81]
-    return xd
-
-# voorbeeld van die puntmassa se toestandsveranderlike vektor:
-print(puntmassa([10, 10], 0, []))
-
-dt = 0.01 # sekondes
-tydvektor = [i*dt for i in range(0, 1001)]
-afstand = [0]
-
-# Beginwaardes
-x0 = [0, 0]
-xx =[]
-
-for tyd in tydvektor:
-    xx = rk4(puntmassa, dt, x0, len(x0), [])
-    afstand.append(xx[0])
-    
-
-plt.plot(tydvektor, afstand[0:-1], 'b', label=r's')
-
-plt.legend(loc='best')
-plt.xlabel('t [s]')
-plt.ylabel('afstand [m]')
-plt.grid()
-plt.show()
-
-print(f"{'Antwoord moet wees '}{0.5*9.81*(0.01*1000)**2}")
-print(f"{'Antwoord moet is '}{afstand[-2]:3.8f}")
-
-
-#%%
-# Nie-lineere toestandsveranderlike stelsel wat 'n pendulum beskryf
-# Hierdie stelsel word gebruik om die numeriese Jakobiaan funksie te ontfout
-
-def pendulum(x, t, u):
-    l = 3 # [m]
-    m = 0.1 # [kg]
-
-    xd = [0, 0]
-
-    xd[0] = x[1]
-    xd[1] = -(9.81/l)*math.sin(x[0]) + (1/(l*m)*u[0]**2)
-
-    return xd
-
-
-# voorbeeld van die pendulum se toestandsveranderlike vektor:
-# Rondom die ekwilibrium punt
-print(pendulum([0, 0], 0, [0]))
-
-dt = 0.01 # sekondes
-tydvektor = [i*dt for i in range(0, 1001)]
-afstand = [0]
-
-# Beginwaardes
-x0 = [0.05, 0]
-xx =[]
-u = [0.5]
-
-for tyd in tydvektor:
-    xx = rk4(pendulum, dt, x0, len(x0), u)
-    afstand.append(xx[0]*180/3.14159)
-    
-
-plt.plot(tydvektor, afstand[0:-1], 'b', label=r'$\theta$')
-
-plt.legend(loc='best')
-plt.xlabel('t [s]')
-plt.ylabel('Hoek [grade]')
-plt.grid()
-plt.show()
+    regtewaarde = [[0, 1], [-9.81/3, 0]]
+    print(f"{'Analitiese waarde van Jakobiaan A'}{regtewaarde}")
+    print('Hier is die eiewaardes en eievektore')
+    eiewaardes, eievektore = np.linalg.eig(np.array(regtewaarde))
+    print(eiewaardes)
+    regtewaarde = [[0], [(2/(0.1*3)) *(0.5)**0.5]]
+    print(f"{'Analitiese waarde van Jakobiaan B vir F = 0.5'}{regtewaarde}")
 
 
 
-#%%
-# Hoe om 'n funksie in 'n ander funksie te roep:
-# Hierdie voorbeeld word benodig om byvoorbeeld die 
-# vliegtuigmodel funksie te stuur na die simpleks
-# algoritme of die Jakobiaan algoritme
-#
-# Python program to illustrate functions 
-# can be passed as arguments to other functions 
-def shout(text): 
-    return text.upper() 
+#%% Main funksie
 
-def whisper(text): 
-    return text.lower() 
+def main():
+    # Voorbeeld van Runge Kutta integrasie
+    print("Punt massa integrasie voorbeeld")
+    voorbeeldIntegrasiePuntMassa()
+    print("Pendulum integrasie voorbeeld")
+    voorbeeldIntegrasiePendulum()
 
-def greet(func): 
-    # storing the function in a variable 
-    greeting = func("Hi, I am created by a function passed as an argument.") 
-    print(greeting)
+    # Voorbeeld van Jakobiaan berekening
+    print("Jakobiaan berekening voorbeeld")
+    voorbeeldJakobiaan()
 
-greet(shout) 
-greet(whisper)
-# %%
+
+
+
+if __name__ == "__main__":
+    main()
