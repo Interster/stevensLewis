@@ -144,4 +144,19 @@ def doelfunksie(inset, vliegtuig, konstant):
 
 
 
-# %%
+#%% Jakobiaan omhulsel funksie vir vragvliegtuig
+def vragvliegtuig(x0, 0, u0, f, vliegtuigmodel):
+    # Hierdie funksie roep die vragvliegtuig funksie f
+    # met insetparameters wat presies dieselfde is as die numJakob funksie:
+    # numJakob(f, 0, u0, x0)
+    #
+    # Die funksie f in numJakob het die volgende vorm:
+    # xd = afgeleidefunksie(x0, t, u0, **kwargs)
+    # waar kwargs die vliegtuig model dictionary is
+
+    # f(x, t, vliegtuig, land, THTL, ELEV)
+    xd = f(x0, 0, vliegtuigmodel, False, u0[0], u0[1])
+
+    return xd
+
+#%%

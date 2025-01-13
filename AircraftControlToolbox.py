@@ -4,7 +4,7 @@ import math as math
 import numpy as np
 import pygame 
 
-#%%
+#%% Runge-Kutta integrasie algoritme
 def rk4(f, dt, xx, nx, u):
     # Runge Kutta 4de orde:
     # f - funksie wat integreer moet word.
@@ -44,7 +44,7 @@ def rk4(f, dt, xx, nx, u):
 
     return xx
 
-#%%
+#%% Pendulum funksie
 # Nie-lineere toestandsveranderlike stelsel wat 'n pendulum beskryf
 # Hierdie stelsel word gebruik om die numeriese Jakobiaan funksie te ontfout
 
@@ -88,7 +88,7 @@ def voorbeeldIntegrasiePendulum():
     plt.show()
 
 
-#%%
+#%% Puntmassa funksie
 
 def puntmassa(x, t, u):
     # Bereken die posisie van 'n puntmassa, gegewe die beginsnelheid
@@ -133,19 +133,24 @@ def voorbeeldIntegrasiePuntMassa():
 
 
 
-#%%
+#%% Numeriese Jakobiaan funksie
 # Kyk na NumerieseJakobiaan.md vir notas
 
-def numJakob(f, t, u0, x0):
+def numJakob(f, t, u0, x0, **kwargs):
     # Funksie wat die numeriese Jakobiaan van 'n LTI (Lineer tyd onveranderlike)
     # stelsel bereken.  Die Jakobiaan word rondom 'n gestadigde bedryfspunt
     # bereken.    
     # 
     # Insette:  
-    # f         - funksie van die bewegingsvergelykings
+    # f         - funksie van die bewegingsvergelykings OF die omhulselfunksie 
+    #             van die bewegingsvergelykings
     # t         - tyd in [s] waar funksie evalueer word
     # u         - beheervektor waar rondom die Jakobiaan bereken word
     # xx        - beginwaardes waar rondom die Jakobiaan bereken word
+    #
+    # Indien daar ekstra insette is:
+    # kwargs['vliegtuigfunksie']        - vliegtuigfunksie wat bewegingsvergelykings bevat
+    # kwargs['vliegtuigmodel']          - vliegtuigmodel in dictionary formaat
     
     # 'n LTI stelsel is nie afhanklik van tyd nie, dus hou t = 0 arbriter
     t = 0

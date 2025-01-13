@@ -346,7 +346,7 @@ plt.plot(t, y)
 plt.title('Step response')
 plt.xlabel('t')
 plt.ylabel('y')
-plt. legend(["H1", "H2", "H3", "H4"])
+plt.legend(["H1", "H2", "H3", "H4"])
 plt.grid()
 plt.show()
 
@@ -361,3 +361,35 @@ print(H1stelsel)
 print(H2stelsel)
 print(H3stelsel)
 print(H4stelsel)
+
+#%% Funksies met varierende aantal insette
+
+# Definieer alle konstantes met 'n dictionary
+tuig = {'S' : 2170.0,
+        'CBAR' : 17.5,
+        'AM' : 5e3
+        }
+
+def voorbeeld1(t, u, x):
+    print(u*x)
+
+
+def voorbeeld2(t, u, x, vt):
+    print(u*x)
+    print(vt['S'])
+
+def evalueerFunksie(f, t, u, x, **kwargs):
+    if kwargs.__len__() > 0:
+        voorbeeld2(t, u, x, kwargs['vliegtuigmodel'])
+    else:
+        voorbeeld1(t, u, x)
+
+
+t = 0
+u = 3
+x = 4
+
+evalueerFunksie(evalueerFunksie, t, u, x)
+evalueerFunksie(evalueerFunksie, t, u, x, vliegtuigmodel = tuig)
+
+#%%
