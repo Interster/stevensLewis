@@ -392,4 +392,80 @@ x = 4
 evalueerFunksie(evalueerFunksie, t, u, x)
 evalueerFunksie(evalueerFunksie, t, u, x, vliegtuigmodel = tuig)
 
+
+#%% Longitudinale modes, Stevens & Lewis bl. 164
+# Example 3.7-3 F-16 longitudinal modes
+import numpy as np
+
+# V_T, alpha, theta, q
+A = [[-2.0244e-2, 7.8761, -3.2169e1, -6.502e-1 ], 
+     [-2.5373e-4, -1.0189, 0.0, 9.0484e-1],
+     [0.0, 0.0, 0.0, 1.0],
+     [7.9472e-11, -2.4982, 0.0, -1.3861]]
+
+eiewaardes, eievektore = np.linalg.eig(np.array(A))
+for i in eiewaardes:
+    print(i)
+
+    a = i.real
+    b = i.imag
+    zeta = (1/((b/a)**2 + 1))**0.5
+    omegan = -a/zeta
+    print(f'{'Damped natural frequency '}{b:.2f}{' rad/s'}')
+    print(f'{'Damped natural frequency '}{b/2/3.14159:.2f}{' Hz'}')
+    print(f'{'Period of damped natural frequency '}{(2*3.14159)/b:.2f}{' s'}')
+    print(f'{'Damping ratio '}{zeta:.3f}')
+
+
+
 #%%
+# Nou vir MIMO voorbeeld;  
+# Uit Stevens & Lewis:
+# Bl. 174:  Transport aircraft throttle response
+
+import scipy.signal as signal
+import matplotlib.pyplot as plt
+import control as ct
+import numpy as np
+
+# V_T, alpha, theta, q
+A = [[-1.6096e-2, 1.8832e1, -3.217e1, 0.0], 
+     [-1.0189e-3, -6.3537e-1, 0.0, 1.0],
+     [0.0, 0.0, 0.0, 1.0],
+     [0.0, -2.5e2, 2.5e2, 0]]
+# delta_{throttle}
+B = [[0, 0, 0, 9.9679], 
+     [0, 0, 0, -6.513e-3], 
+     [0, 0, 0, 0.0], 
+     [0, 0, 0, 2.5575e-2]]
+D = [[0, 0, 0, 0]]
+
+
+C = [[0, 0, 0, 1]] # x V_T
+# Find transfer function from u1 to y1
+num, den = signal.ss2tf(A, B, C, D, 0)
+H1 = signal.TransferFunction(num, den)
+print(H1)
+
+
+t, y = signal.step(H1)
+plt.plot(t, y)
+
+
+plt.title('Step response')
+plt.xlabel('t')
+plt.ylabel('y')
+plt.grid()
+plt.show()
+
+
+# NOG NIE REG NIE
+# Maak control package objekte van die scipy oordragsfunksies:
+H1stelsel = ct.tf(H1.num, H1.den)
+
+
+print(H1stelsel)
+
+# Bereken eiewaardes en eievektore van stelsel
+eiewaardes, eievektore = np.linalg.eig(np.array(A))
+
