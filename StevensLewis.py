@@ -321,6 +321,18 @@ plt.ylabel('tyd [milisekondes]')
 plt.grid()
 plt.show()
 
+#%% Bereken die numeriese Jakobiaan
+
+
+x0 = [500, 5.43*3.14159/180, 5.43*3.14159/180, 0, 30000, 0]
+# u0 = [throttle, elev]
+u0 = [0.204, -4.1]
+
+
+A, B = numJakob(AC3DOF.vragvliegtuig, 0, u0, x0, vliegtuigfunksie = AC3DOF.f, vliegtuigmodel = vliegtuig)
+
+print(A)
+
 #%%
 
 

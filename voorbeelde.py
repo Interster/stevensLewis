@@ -380,23 +380,22 @@ def voorbeeld2(t, u, x, vt):
 
 def evalueerFunksie(f, t, u, x, **kwargs):
     if kwargs.__len__() > 0:
-        voorbeeld2(t, u, x, kwargs['vliegtuigmodel'])
+        f(t, u, x, kwargs['vliegtuigmodel'])
     else:
-        voorbeeld1(t, u, x)
+        f(t, u, x)
 
 
 t = 0
 u = 3
 x = 4
 
-evalueerFunksie(evalueerFunksie, t, u, x)
-evalueerFunksie(evalueerFunksie, t, u, x, vliegtuigmodel = tuig)
+
+evalueerFunksie(voorbeeld1, t, u, x)
+evalueerFunksie(voorbeeld2, t, u, x, vliegtuigmodel = tuig)
 
 
 
-#%%
-# Nou vir MIMO voorbeeld;  
-# Uit Stevens & Lewis:
+#%% Nou vir MIMO voorbeeld;  Uit Stevens & Lewis:
 # Bl. 174:  Transport aircraft throttle response
 
 import scipy.signal as signal

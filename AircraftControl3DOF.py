@@ -145,7 +145,7 @@ def doelfunksie(inset, vliegtuig, konstant):
 
 
 #%% Jakobiaan omhulsel funksie vir vragvliegtuig
-def vragvliegtuig(x0, 0, u0, f, vliegtuigmodel):
+def vragvliegtuig(x0, t, u0, f, vliegtuigmodel):
     # Hierdie funksie roep die vragvliegtuig funksie f
     # met insetparameters wat presies dieselfde is as die numJakob funksie:
     # numJakob(f, 0, u0, x0)
@@ -154,9 +154,27 @@ def vragvliegtuig(x0, 0, u0, f, vliegtuigmodel):
     # xd = afgeleidefunksie(x0, t, u0, **kwargs)
     # waar kwargs die vliegtuig model dictionary is
 
+    t = 0
     # f(x, t, vliegtuig, land, THTL, ELEV)
-    xd = f(x0, 0, vliegtuigmodel, False, u0[0], u0[1])
+    # x = [VT, ALPHA, THETA, Q, H, Distance]
+    xd = f(x0, t, vliegtuigmodel, False, u0[0], u0[1])
 
-    return xd
+    nuweindeks = [0, 1, 2, 3, 4]
+    xout = [0, 0, 0, 0 , 0]
+    # Verander orde van toestandsveranderlike vektor
+    for indeks in nuweindeks:
+        xout[indeks] = xd[indeks]
+
+    return xout
+
+
+def demonstreerOmhulsel():
+    x0 = [500, 5.43*3.14159/180, 5.43*3.14159/180, 0, 30000, 0]
+    # u0 = [throttle, elev]
+    u0 = [0.204, -4.1]
+
+    print(vragvliegtuig(x0, 0, u0, f, vliegtuig))
+
+
 
 #%%

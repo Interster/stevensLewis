@@ -155,23 +155,39 @@ def numJakob(f, t, u0, x0, **kwargs):
     # 'n LTI stelsel is nie afhanklik van tyd nie, dus hou t = 0 arbriter
     t = 0
     
-    def njvek(f, t, u0, x0, dx, ni, tipe):
+    def njvek(f, t, u0, x0, dx, ni, tipe, **kwargs):
         # Bereken numeriese Jakobiaan vektor
         # Bepaal 'n toestandsveranderlike vektor van die funksie
         # ni is die nommer van die veranderlike wat versteur word
         # dx is die waarde waarmee die veranderlike versteur word
         # tipe is 'A' of 'B' en dui die stelsel of inset Jakobiaan aan
 
-        xd0 = f(x0, t, u0) # vektor by gestadigde toestand
+        if kwargs.__len__() > 0:
+            xd0 = f(x0, t, u0, 
+                    kwargs['vliegtuigfunksie'], 
+                    kwargs['vliegtuigmodel'])
+        else:
+            xd0 = f(x0, t, u0) # vektor by gestadigde toestand
+        
         x1 = [item for item in x0] # Inisialiseer die tweede vektor by versteurde toestand
         u1 = [item for item in u0] # Inisialiseer die tweede vektor by versteurde toestand
         
         if tipe == 'A':
             x1[ni] += dx
-            xd1 = f(x1, t, u0)
+            if kwargs.__len__() > 0:
+                xd1 = f(x1, t, u0, 
+                    kwargs['vliegtuigfunksie'], 
+                    kwargs['vliegtuigmodel'])
+            else:
+                xd1 = f(x1, t, u0)
         elif tipe == 'B':
             u1[ni] += dx
-            xd1 = f(x0, t, u1)
+            if kwargs.__len__() > 0:
+                xd1 = f(x0, t, u1, 
+                    kwargs['vliegtuigfunksie'], 
+                    kwargs['vliegtuigmodel'])
+            else:
+                xd1 = f(x0, t, u1)
 
         njvek = []
         # Bereken die gradient vir elke veranderlike
@@ -180,7 +196,7 @@ def numJakob(f, t, u0, x0, **kwargs):
         
         return njvek
 
-    def njvekkonv(f, t, u0, x0, ni, tipe):
+    def njvekkonv(f, t, u0, x0, ni, tipe, **kwargs):
         # Konvergeer die Jakobiaan vektor totdat minder as 0.1% 
         # verandering in die grootste verandering gebeur het.
             
@@ -188,9 +204,19 @@ def numJakob(f, t, u0, x0, **kwargs):
         tolcheck = 1
 
         while tolcheck > 0.0001:
-            njvek0 = njvek(f, t, u0, x0, dx, ni, tipe)
+            if kwargs.__len__() > 0:
+                njvek0 = njvek(f, t, u0, x0, dx, ni, tipe, 
+                    vliegtuigfunksie = kwargs['vliegtuigfunksie'], 
+                    vliegtuigmodel = kwargs['vliegtuigmodel'])
+            else:
+                njvek0 = njvek(f, t, u0, x0, dx, ni, tipe)
             dx = dx/2
-            njvek1 = njvek(f, t, u0, x0, dx, ni, tipe)
+            if kwargs.__len__() > 0:
+                njvek1 = njvek(f, t, u0, x0, dx, ni, tipe, 
+                    vliegtuigfunksie = kwargs['vliegtuigfunksie'], 
+                    vliegtuigmodel = kwargs['vliegtuigmodel'])
+            else:
+                njvek1 = njvek(f, t, u0, x0, dx, ni, tipe)
 
             tolerance = []
 
@@ -208,7 +234,12 @@ def numJakob(f, t, u0, x0, **kwargs):
     Jakobiaant = []
     
     for ni in range(0, len(x0)):
-        Jakobiaant.append(njvekkonv(f, t, u0, x0, ni, 'A'))
+        if kwargs.__len__() > 0:
+            Jakobiaant.append(njvekkonv(f, t, u0, x0, ni, 'A', 
+                                        vliegtuigfunksie = kwargs['vliegtuigfunksie'], 
+                                        vliegtuigmodel = kwargs['vliegtuigmodel']))
+        else:
+            Jakobiaant.append(njvekkonv(f, t, u0, x0, ni, 'A'))
 
     # star operator will first
     # unpack the values of 2D list
@@ -221,7 +252,12 @@ def numJakob(f, t, u0, x0, **kwargs):
     Jakobiaant = []
 
     for ni in range(0, len(u0)):
-        Jakobiaant.append(njvekkonv(f, t, u0, x0, ni, 'B'))
+        if kwargs.__len__() > 0:
+            Jakobiaant.append(njvekkonv(f, t, u0, x0, ni, 'B', 
+                                        vliegtuigfunksie = kwargs['vliegtuigfunksie'], 
+                                        vliegtuigmodel = kwargs['vliegtuigmodel']))
+        else:
+            Jakobiaant.append(njvekkonv(f, t, u0, x0, ni, 'B'))
 
     # Transponeer die matriks
     JakobiaanB = list(map(list, zip(*Jakobiaant)))
