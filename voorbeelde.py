@@ -393,30 +393,6 @@ evalueerFunksie(evalueerFunksie, t, u, x)
 evalueerFunksie(evalueerFunksie, t, u, x, vliegtuigmodel = tuig)
 
 
-#%% Longitudinale modes, Stevens & Lewis bl. 164
-# Example 3.7-3 F-16 longitudinal modes
-import numpy as np
-
-# V_T, alpha, theta, q
-A = [[-2.0244e-2, 7.8761, -3.2169e1, -6.502e-1 ], 
-     [-2.5373e-4, -1.0189, 0.0, 9.0484e-1],
-     [0.0, 0.0, 0.0, 1.0],
-     [7.9472e-11, -2.4982, 0.0, -1.3861]]
-
-eiewaardes, eievektore = np.linalg.eig(np.array(A))
-for i in eiewaardes:
-    print(i)
-
-    a = i.real
-    b = i.imag
-    zeta = (1/((b/a)**2 + 1))**0.5
-    omegan = -a/zeta
-    print(f'{'Damped natural frequency '}{b:.2f}{' rad/s'}')
-    print(f'{'Damped natural frequency '}{b/2/3.14159:.2f}{' Hz'}')
-    print(f'{'Period of damped natural frequency '}{(2*3.14159)/b:.2f}{' s'}')
-    print(f'{'Damping ratio '}{zeta:.3f}')
-
-
 
 #%%
 # Nou vir MIMO voorbeeld;  

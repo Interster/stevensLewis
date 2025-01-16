@@ -244,6 +244,58 @@ def voorbeeldJakobiaan():
     regtewaarde = [[0], [(2/(0.1*3)) *(0.5)**0.5]]
     print(f"{'Analitiese waarde van Jakobiaan B vir F = 0.5'}{regtewaarde}")
 
+#%% Natuurlike frekwensie en dempingsverhouding funksie
+
+def odz(A):
+    # Funksie wat omega gedemp en zeta bereken van die A matriks
+
+    eiewaardes, eievektore = np.linalg.eig(np.array(A))
+    for i in eiewaardes:
+        print('\n')
+        print(f'{'Eiewaarde '}{i}')
+
+        a = i.real
+        b = i.imag
+        zeta = (1/((b/a)**2 + 1))**0.5
+        omegan = -a/zeta
+
+        if b != 0 and b > 0:
+            print(f'{'Damped natural frequency '}{b:.2f}{' rad/s'}')
+            print(f'{'Damped natural frequency '}{b/2/3.14159:.2f}{' Hz'}')
+            print(f'{'Period of damped natural frequency '}{(2*3.14159)/b:.2f}{' s'}')
+            print(f'{'Damping ratio '}{zeta:.3f}')
+        elif b == 0:
+            print(f'{'Time constant '}{-1/a:.2f}{' s'}')
+
+
+def voorbeeldOmegaZeta():
+    # Longitudinale modes, Stevens & Lewis bl. 164
+    # Example 3.7-3 F-16 longitudinal modes
+    import numpy as np
+
+    # V_T, alpha, theta, q
+    A = [[-2.0244e-2, 7.8761, -3.2169e1, -6.502e-1 ], 
+        [-2.5373e-4, -1.0189, 0.0, 9.0484e-1],
+        [0.0, 0.0, 0.0, 1.0],
+        [7.9472e-11, -2.4982, 0.0, -1.3861]]
+            
+    print('Example 3.7-3 F-16 longitudinal modes')
+    odz(A)
+
+    # Longitudinale modes, Stevens & Lewis bl. 165
+    # Example 3.7-4 F-16 lateral-directional modes
+    import numpy as np
+
+    # V_T, alpha, theta, q
+    A = [[-3.22e-1, 6.4032e-2, 3.8904e-2, -9.9156e-1], 
+        [0.0, 0.0, 1.0, 3.9385e-2],
+        [-3.0919e1, 0.0, -3.673, 6.7425e-1],
+        [9.4724, 0.0, -2.6358e-2, -4.9849e-1]]
+
+    print('Example 3.7-4 F-16 lateral-directional modes')
+    odz(A)
+
+
 
 
 #%% Main funksie
@@ -258,6 +310,10 @@ def main():
     # Voorbeeld van Jakobiaan berekening
     print("Jakobiaan berekening voorbeeld")
     voorbeeldJakobiaan()
+
+    # Voorbeeld van gedempte natuurlike frekwensie en dempingberekening
+    print("Natuurlike frekwensie en demping berekening voorbeeld")
+    voorbeeldOmegaZeta()
 
 
 
