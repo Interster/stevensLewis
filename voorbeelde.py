@@ -310,6 +310,11 @@ B = [[0, 0], [2, 4]]
 D = [[0, 0]]
 
 
+A = [[0, 1], [0, -1]]
+B = [[0], [1]]
+D = 0
+
+
 C = [[1, 0]]
 # Find transfer function from u1 to y1
 num, den = signal.ss2tf(A, B, C, D, 0)
@@ -352,10 +357,10 @@ plt.show()
 
 
 # Maak control package objekte van die scipy oordragsfunksies:
-H1stelsel = ct.tf(H1.num, H3.den)
-H2stelsel = ct.tf(H2.num, H3.den)
+H1stelsel = ct.tf(H1.num, H1.den)
+H2stelsel = ct.tf(H2.num, H2.den)
 H3stelsel = ct.tf(H3.num, H3.den)
-H4stelsel = ct.tf(H4.num, H3.den)
+H4stelsel = ct.tf(H4.num, H4.den)
 
 print(H1stelsel)
 print(H2stelsel)
@@ -407,16 +412,16 @@ import numpy as np
 A = [[-1.6096e-2, 1.8832e1, -3.217e1, 0.0], 
      [-1.0189e-3, -6.3537e-1, 0.0, 1.0],
      [0.0, 0.0, 0.0, 1.0],
-     [0.0, -2.5e2, 2.5e2, 0]]
+     [1.0744e-4, -7.7544e-1, 0.0, -5.2977e-1]]
 # delta_{throttle}
-B = [[0, 0, 0, 9.9679], 
-     [0, 0, 0, -6.513e-3], 
-     [0, 0, 0, 0.0], 
-     [0, 0, 0, 2.5575e-2]]
-D = [[0, 0, 0, 0]]
+B = [[9.9679], 
+     [-6.513e-3], 
+     [0.0], 
+     [2.5575e-2]]
+D = 0
 
 
-C = [[0, 0, 0, 1]] # x V_T
+C = [[1, 0, 0, 0]] # x V_T
 # Find transfer function from u1 to y1
 num, den = signal.ss2tf(A, B, C, D, 0)
 H1 = signal.TransferFunction(num, den)
