@@ -8,6 +8,8 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 import pygame 
+import scipy.signal as signal
+import control as ct
 
 #%%
 # Laai eie funksie modulus
@@ -358,6 +360,54 @@ print('A:')
 drukMatriks(A)
 print('B:')
 drukMatriks(B)
+
+# Verwyder die laaste kolom en laaste ry om dieselfde matriks as in die voorbeeld
+# op te lewer
+Anuut = []
+rows, cols = 4, 4
+for i in range(rows):
+    col = []
+    for j in range(cols):
+        col.append(A[i][j])
+    Anuut.append(col)
+drukMatriks(Anuut)
+
+Bnuut = []
+rows, cols = 4, 1
+for i in range(rows):
+    col = []
+    for j in range(cols):
+        col.append(B[i][j])
+    Bnuut.append(col)
+drukMatriks(Bnuut)
+
+
+D = 0
+C = [[1, 0, 0, 0]] # x V_T
+# Find transfer function from u1 to y1
+num, den = signal.ss2tf(Anuut, Bnuut, C, D, 0)
+H1 = signal.TransferFunction(num, den)
+print(H1)
+
+t, y = signal.step(H1)
+plt.plot(t, y)
+
+plt.title('Step response')
+plt.xlabel('t')
+plt.ylabel('y')
+plt.grid()
+plt.show()
+
+
+# Maak control package objekte van die scipy oordragsfunksies:
+H1stelsel = ct.tf(H1.num, H1.den)
+
+
+print(H1stelsel)
+# Bereken natuurlike frekwensie en dempingsverhouding van stelsel
+odz(Anuut)
+
+
 
 #%%
 
