@@ -114,6 +114,23 @@ res = minimize(AC3DOF.doelfunksie, inset, method='nelder-mead',
 print(f"{konstant[1] :^10}{konstant[0] :^10}{res.x[0]:7.3f}{res.x[1]:8.2f}{res.x[2]*180/3.14159:8.2f}")
 
 
+
+# inset = [throttle, elevator [deg], theta [rad]]
+# Hierdie gee nog nie selfde antwoord as handboek nie, want dit is nie
+# seker of die throttle ook opgestel is as veranderlike nie.
+# MOET NOG VERFYN
+inset = [0.204, -4.10, 5.43*3.14159/180]
+# konstant = [Spoed [ft/s], hoogte [ft]]
+konstant = [250, 0]
+res = minimize(AC3DOF.doelfunksie, inset, method='nelder-mead', 
+               args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
+print('\n')
+print(f"{konstant[1] :^10}{konstant[0] :^10}{res.x[0]:7.3f}{res.x[1]:8.2f}{res.x[2]*180/3.14159:8.2f}")
+x0 = [konstant[0], inset[2], inset[2], 0, konstant[1], 0]
+u0 = [inset[0], inset[1]]
+stoorGelykVlug(x0, u0, 'Voorbeeld 3_7-6', 'Voorbeeld 3.7-6 op bladsy 173:  Transport aircraft throttle response.')
+
+
 #%% Beheer 'n reghoek met die heihoek of theta wat modelleer word met 3DOF model
  
 # Beginvoorwaardes van simulasie
@@ -323,7 +340,7 @@ plt.show()
 
 #%% Bereken die numeriese Jakobiaan
 
-
+# Voorbeeld van numJakob wat die veranderlikes vooraf definieer (laai dit nie van leer af nie)
 x0 = [500, 5.43*3.14159/180, 5.43*3.14159/180, 0, 30000, 0]
 # u0 = [throttle, elev]
 u0 = [0.204, -4.1]
@@ -331,7 +348,16 @@ u0 = [0.204, -4.1]
 
 A, B = numJakob(AC3DOF.vragvliegtuig, 0, u0, x0, vliegtuigfunksie = AC3DOF.f, vliegtuigmodel = vliegtuig)
 
-print(A)
+drukMatriks(A)
+
+# Voorbeeld 3.7-6:  Transport aircraft throttle response
+x0, u0 = leesGelykVlug('Voorbeeld 3_7-6')
+A, B = numJakob(AC3DOF.vragvliegtuig, 0, u0, x0, vliegtuigfunksie = AC3DOF.f, vliegtuigmodel = vliegtuig)
+
+print('A:')
+drukMatriks(A)
+print('B:')
+drukMatriks(B)
 
 #%%
 

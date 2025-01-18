@@ -1,0 +1,6 @@
+Voorbeeld 3.7-6 op bladsy 173:  Transport aircraft throttle response.
+3DOF x0 = [VT, ALPHA, THETA, Q, H, Distance]
+3DOF u0 = [throttle, elev]
+
+x0, 250,0.09477129833333332,0.09477129833333332,0,0,0
+u0, 0.204,-4.1

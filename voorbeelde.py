@@ -453,6 +453,8 @@ import sympy
 sympy.init_printing()
 
 # Maak 'n Laplace veranderlike s
+# Die Laplace metodes kom uit hierdie webwerf dokumentasie:
+# https://dynamics-and-control.readthedocs.io/en/latest/index.html
 t, s = sympy.symbols('t, s')
 
 # oordragsfunksie 
@@ -487,6 +489,14 @@ sympy.init_printing()
 
 sympy.Integral(sympy.sqrt(1/x), x)
 
+# Substitusie
+expr = sympy.cos(x) + 1
+nuwe = expr.subs(x, 2*x)
+
+# Evalueer 'n funksie
+# Substitueer eers pi in "nuwe" in en evalueer dan
+evalueer = nuwe.subs(x, 3.14159)
+print(evalueer.evalf())
 
 #%%
 

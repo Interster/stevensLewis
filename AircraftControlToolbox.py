@@ -416,6 +416,24 @@ def voorbeeldLeesSkryfGelykvlug():
     print('u0 ')
     print(u0)
 
+#%% Druk matrikse sodat hulle maklik leesbaar is in wetenskaplike notasie
+
+
+def drukMatriks(matriks):
+    # Druk die lineariseerde matriksse sodat hulle maklik leesbaar is
+    s = [[str("{:.4e}".format(e)) for e in row] for row in matriks]
+    lens = [max(map(len, col)) for col in zip(*s)]
+    fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
+    table = [fmt.format(*row) for row in s]
+    print('\n'.join(table))
+
+def voorbeeldDrukMatriks():
+    A = [[3.14159, 8.9e-5], [5.98, 7.2893847293742987]]
+    print('Hoe matriks gewoonlik lyk')
+    print(A)
+
+    print('Hoe dit lyk in wetenskaplike notasie')
+    drukMatriks(A)
 
 #%% Main funksie
 
@@ -436,6 +454,9 @@ def main():
 
     # Voorbeeld van lees en skryf van gelykvlug waardes
     voorbeeldLeesSkryfGelykvlug()
+
+    # Voorbeeld van hoe om matriks leesbaar te druk
+    voorbeeldDrukMatriks()
 
 
 
