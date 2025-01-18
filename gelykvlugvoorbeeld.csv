@@ -1,0 +1,6 @@
+Toets gelykvlug string
+3DOF x0 = [VT, ALPHA, THETA, Q, H, Distance]
+3DOF u0 = [throttle, elev]
+
+x0, 500,0.09477129833333332,0.09477129833333332,0,30000,0
+u0, 0.204,-4.1

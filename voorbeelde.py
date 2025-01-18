@@ -439,7 +439,6 @@ plt.grid()
 plt.show()
 
 
-# NOG NIE REG NIE
 # Maak control package objekte van die scipy oordragsfunksies:
 H1stelsel = ct.tf(H1.num, H1.den)
 
@@ -448,4 +447,48 @@ print(H1stelsel)
 
 # Bereken eiewaardes en eievektore van stelsel
 eiewaardes, eievektore = np.linalg.eig(np.array(A))
+
+#%% Vergelyk dit met die antwoord op bl. 174 en gebruik sympy
+import sympy
+sympy.init_printing()
+
+# Maak 'n Laplace veranderlike s
+t, s = sympy.symbols('t, s')
+
+# oordragsfunksie 
+VTdeltath = (9.968*(s - 0.0601)*(s + 0.6065 - 0.8811j)*(s + 0.6065 + 0.8811j))/ \
+((s + 2.277e-4 + 0.1567j)*(s + 2.277e-4 - 0.1567j)*(s + 0.5904 + 0.8811j)*(s + 0.5904 - 0.8811j))
+
+# Gee selfde antwoord as die beheerstelsel module hierbo
+VTdeltath.simplify()
+
+# Die inverse Laplace is as volg:
+F = VTdeltath.simplify()
+ft = sympy.inverse_laplace_transform(F, s, t)
+
+ft.simplify()
+
+#%% Verskillende maniere om komplekse getalle te definieer
+
+# Volgende metodes gee selfde resultate
+z1 = complex(0.6065, 0.8811)
+z2 = complex(0.6065, -0.8811)
+
+z1 = 0.6065 + 0.8811j
+
+print(z1*z2)
+
+#%% Gebruik sympy
+import sympy
+sympy.init_printing()
+
+x = sympy.symbols('x')
+sympy.init_printing()
+
+sympy.Integral(sympy.sqrt(1/x), x)
+
+
+#%%
+
+        
 

@@ -332,6 +332,89 @@ def voorbeeldOmegaZeta():
     odz(A)
 
 
+#%% Skryf en lees gelykvlug waardes
+
+def stoorGelykVlug(x0, u0, leernaam, beskrywing):
+    # Stoor die gelykvlug waardes in 'n *.csv leer
+    #
+    # Insette:
+    # x0        - Beginwaardes
+    # u0        - Beheerinsetwaardes by gelykvlug
+    # leernaam  - Leernaam van die *.csv leer waar die data gestoor word
+    # beskrywing- Beskryf die gelykvlug toestand bv.: V = 500ft/s gelykvlug
+    
+    def lysSkryf(lys, lysnaam, file):
+        # Maak 'n string van die veranderlike, skryf na die leer en sit komma by
+        # Veranderlike naam skryf
+        file.write(f'{lysnaam}{', '}')
+
+        stringlys = []
+        for i in lys:
+            stringlys.append(str(i))
+        
+        file.write(','.join(stringlys)) 
+        file.write('\n')
+
+    
+    file = open(f'{leernaam}{'.csv'}', "w") 
+    file.write(f'{beskrywing}{'\n'}')
+    file.write('3DOF x0 = [VT, ALPHA, THETA, Q, H, Distance]\n') 
+    file.write('3DOF u0 = [throttle, elev]\n')
+    file.write('\n') 
+    
+    lysSkryf(x0, 'x0', file)
+    lysSkryf(u0, 'u0', file)
+    
+    file.close() 
+
+
+def leesGelykVlug(leernaam):
+    # Lees die gelykvlug waardes in 'n *.csv leer
+    #
+    # Insette:
+    # x0        - Beginwaardes
+    # u0        - Beheerinsetwaardes by gelykvlug
+    
+    file = open(f'{leernaam}{'.csv'}', "r+")
+    leerlyne = (file.readlines())
+
+    for lyn in leerlyne:
+        if 'x0, ' in lyn:
+            lyn = lyn.replace('\n','')
+            lyn = lyn.replace('x0, ','')
+            lynlys = lyn.split(',')
+
+            x0 = []
+            for nommer in lynlys:
+                x0.append(float(nommer))
+        
+        if 'u0, ' in lyn:
+            lyn = lyn.replace('\n','')
+            lyn = lyn.replace('u0, ','')
+            lynlys = lyn.split(',')
+
+            u0 = []
+            for nommer in lynlys:
+                u0.append(float(nommer))
+
+    file.close()
+
+    return x0, u0
+
+def voorbeeldLeesSkryfGelykvlug():
+    # x0 = [VT, ALPHA, THETA, Q, H, Distance]
+    x0 = [500, 5.43*3.14159/180, 5.43*3.14159/180, 0, 30000, 0]
+    # u0 = [throttle, elev]
+    u0 = [0.204, -4.1]
+    print('Skryf gelykvlug waardes')
+    stoorGelykVlug(x0, u0, 'gelykvlugvoorbeeld', 'Toets gelykvlug string')
+
+    x0, u0 = leesGelykVlug('gelykvlugvoorbeeld')
+    print('Lees gelykvlug waardes')
+    print('x0 ')
+    print(x0)
+    print('u0 ')
+    print(u0)
 
 
 #%% Main funksie
@@ -350,6 +433,9 @@ def main():
     # Voorbeeld van gedempte natuurlike frekwensie en dempingberekening
     print("Natuurlike frekwensie en demping berekening voorbeeld")
     voorbeeldOmegaZeta()
+
+    # Voorbeeld van lees en skryf van gelykvlug waardes
+    voorbeeldLeesSkryfGelykvlug()
 
 
 

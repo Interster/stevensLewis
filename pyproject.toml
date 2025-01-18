@@ -15,4 +15,5 @@ dependencies = [
     "pygame>=2.6.1",
     "scikit-build>=0.18.1",
     "scipy>=1.15.0",
+    "sympy>=1.13.3",
 ]
