@@ -502,3 +502,53 @@ print(evalueer.evalf())
 
         
 
+#%%
+# How to interpolate in 2D using numpy and scipy
+#
+import numpy as np
+from scipy.interpolate import interp2d
+import matplotlib.pyplot as plt
+
+x = np.linspace(0, 4, 13)
+y = np.array([0, 2, 3, 3.5, 3.75, 3.875, 3.9375, 4])
+X, Y = np.meshgrid(x, y)
+Z = np.sin(np.pi*X/2) * np.exp(Y/2)
+
+x2 = np.linspace(0, 4, 65)
+y2 = np.linspace(0, 4, 65)
+f = interp2d(x, y, Z, kind='cubic')
+Z2 = f(x2, y2)
+
+fig, ax = plt.subplots(nrows=1, ncols=2)
+ax[0].pcolormesh(X, Y, Z)
+
+X2, Y2 = np.meshgrid(x2, y2)
+ax[1].pcolormesh(X2, Y2, Z2)
+
+plt.show()
+
+
+
+
+# %%
+# Plot 3D voorbeeld
+
+# importing libraries
+#from mpl_toolkits import mplot3d
+
+# defining surface and axes
+x = np.outer(np.linspace(-2, 2, 10), np.ones(10))
+y = x.copy().T
+z = np.cos(x ** 2 + y ** 3)
+ 
+fig = plt.figure()
+ 
+# syntax for 3-D plotting
+ax = plt.axes(projection='3d')
+ 
+# syntax for plotting
+ax.plot_surface(x, y, z, cmap='viridis',\
+                edgecolor='green')
+ax.set_title('Surface plot example')
+plt.show()
+# %%

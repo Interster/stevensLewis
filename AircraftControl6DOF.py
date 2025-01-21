@@ -25,8 +25,7 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 
-#%%
-# Atmosferiese model
+#%% Atmosferiese model
 
 def adc(VT, ALT):
     R0 = 2.377e-3 # Sea level density
@@ -45,56 +44,58 @@ def adc(VT, ALT):
 
     return AMACH, QBAR
 
-AMACH, QBAR = adc(500, 0)
 
-#%%
-# Computer model of an F-16
+#%% Computer model of an F-16
 
-# Definieer alle konstantes met 'n dictionary
-vliegtuig = {'S' : 300.0,
-             'B' : 30,
-             'CBAR' : 11.32,
-             'RM' : 1.57e-3,
-             'XCGR' : 0.35,
-             'HE' : 160.0,
-             'Jx' : 9496,
-             'Jy' : 55814,
-             'Jz' : 63100,
-             'Jxy' : 0,
-             'Jxz' : 982,
-             'Jyz' : 0,
-             'G' : 32.17,
-             'RTOD' : 57.29578
-             }
+def F16model():
+    # Definieer die konstantes van die F16 model
+    # Definieer alle konstantes met 'n dictionary
+    vliegtuig = {'S' : 300.0,
+                'B' : 30,
+                'CBAR' : 11.32,
+                'RM' : 1.57e-3,
+                'XCGR' : 0.35,
+                'HE' : 160.0,
+                'Jx' : 9496,
+                'Jy' : 55814,
+                'Jz' : 63100,
+                'Jxy' : 0,
+                'Jxz' : 982,
+                'Jyz' : 0,
+                'G' : 32.17,
+                'RTOD' : 57.29578
+                }
 
-# Calculate the inertia constants
-# Equation 2.4-6, page 80
-Jx = vliegtuig['Jx']
-Jy = vliegtuig['Jy']
-Jz = vliegtuig['Jy']
-Jxy = vliegtuig['Jxy']
-Jxz = vliegtuig['Jxz']
+    # Calculate the inertia constants
+    # Equation 2.4-6, page 80
+    Jx = vliegtuig['Jx']
+    Jy = vliegtuig['Jy']
+    Jz = vliegtuig['Jy']
+    Jxy = vliegtuig['Jxy']
+    Jxz = vliegtuig['Jxz']
 
-GAMMA = Jx*Jz - Jxz**2
-vliegtuig['C1'] = ((Jy - Jz)*Jz - Jxz**2)/GAMMA
-vliegtuig['C2'] = (Jx - Jy + Jz)*Jxz/GAMMA
-vliegtuig['C3'] = Jz/GAMMA
-vliegtuig['C4'] = Jxz/GAMMA
-vliegtuig['C5'] = (Jz - Jx)/Jy
-vliegtuig['C6'] = Jxz/Jy
-vliegtuig['C7'] = 1/Jy
-vliegtuig['C8'] = (Jx*(Jx - Jy) + Jxz**2)/GAMMA
-vliegtuig['C9'] = Jx/GAMMA
+    GAMMA = Jx*Jz - Jxz**2
+    vliegtuig['C1'] = ((Jy - Jz)*Jz - Jxz**2)/GAMMA
+    vliegtuig['C2'] = (Jx - Jy + Jz)*Jxz/GAMMA
+    vliegtuig['C3'] = Jz/GAMMA
+    vliegtuig['C4'] = Jxz/GAMMA
+    vliegtuig['C5'] = (Jz - Jx)/Jy
+    vliegtuig['C6'] = Jxz/Jy
+    vliegtuig['C7'] = 1/Jy
+    vliegtuig['C8'] = (Jx*(Jx - Jy) + Jxz**2)/GAMMA
+    vliegtuig['C9'] = Jx/GAMMA
 
-print(f"{'c1 : '}{vliegtuig['C1']}")
-print(f"{'c2 : '}{vliegtuig['C2']}")
-print(f"{'c3 : '}{vliegtuig['C3']}")
-print(f"{'c4 : '}{vliegtuig['C4']}")
-print(f"{'c5 : '}{vliegtuig['C5']}")
-print(f"{'c6 : '}{vliegtuig['C6']}")
-print(f"{'c7 : '}{vliegtuig['C7']}")
-print(f"{'c8 : '}{vliegtuig['C8']}")
-print(f"{'c9 : '}{vliegtuig['C9']}")
+    print(f"{'c1 : '}{vliegtuig['C1']}")
+    print(f"{'c2 : '}{vliegtuig['C2']}")
+    print(f"{'c3 : '}{vliegtuig['C3']}")
+    print(f"{'c4 : '}{vliegtuig['C4']}")
+    print(f"{'c5 : '}{vliegtuig['C5']}")
+    print(f"{'c6 : '}{vliegtuig['C6']}")
+    print(f"{'c7 : '}{vliegtuig['C7']}")
+    print(f"{'c8 : '}{vliegtuig['C8']}")
+    print(f"{'c9 : '}{vliegtuig['C9']}")
+
+    return vliegtuig
 
 
 def TGEAR(THTL):
@@ -138,27 +139,6 @@ def RTAU(DP):
         RTAU = 1.9 - 0.36*DP
     
     return RTAU
-
-
-
-print(RTAU(26))
-print(PDOT(50, 20))
-print(TGEAR(0.95))
-
-throttlefraction = []
-throttlevalue = []
-# Plot throttle gearing:
-for i in range(0,100):
-    throttlefraction.append(i/100)
-    throttlevalue.append(TGEAR(throttlefraction[i]))
-
-plt.plot(throttlefraction, throttlevalue, 'b', label='Throttle gearing')
-plt.legend(loc='best')
-plt.xlabel('Throttle fraction []')
-plt.ylabel('Throttle [%]')
-plt.grid()
-plt.show()
-
 
 
 def THRUST(POW, ALT, RMACH):
@@ -213,8 +193,6 @@ def THRUST(POW, ALT, RMACH):
     
     return THRUST
 
-print(THRUST(100, 0, 0.8))
-
 
 def DAMP(ALPHA):
     # Various damping coefficients
@@ -254,19 +232,6 @@ def DAMP(ALPHA):
     return D
 
 
-print(DAMP(-10))
-damplist = []
-alphalist = []
-for teller in range(-20, 50):
-    alphalist.append(teller)
-    damptemp = DAMP(teller)
-    damplist.append(damptemp[3])
-
-plt.plot(alphalist, damplist, 'b', label=r'$Damp$')
-
-
-
-
 def CX(ALPHA, EL):
     # x-axis aerodynamic force coefficients
     A = [[-0.099, -0.081, -0.081, -0.063, -0.025, 0.044, 0.097, 0.113, 0.145, 0.167, 0.174, 0.166],
@@ -299,24 +264,7 @@ def CX(ALPHA, EL):
 
     return CX
 
-print(CX(0, 0))
-cxlist = []
-alphalist = []
-for teller in range(-50, 80):
-    alphalist.append(teller)
-    cxlist.append(CX(teller, 0))
 
-plt.plot(alphalist, cxlist, 'b', label=r'$C_x$')
-
-cxlist = []
-alphalist = []
-for teller in range(-50, 80):
-    alphalist.append(teller)
-    cxlist.append(CX(teller, 30))
-
-plt.plot(alphalist, cxlist, 'r', label=r'$C_x 25^\circ$')
-
- 
 def CY(BETA, AIL, RDR):
     # Sideforce coefficient
     CY = -0.02*BETA + 0.021*(AIL/20.0) + 0.086*(RDR/30.0)
@@ -340,15 +288,6 @@ def CZ(ALPHA, BETA, EL):
     CZ = S*(1 - (BETA/57.3)**2) - 0.19*(EL/25.0)
 
     return CZ
-
-print(CZ(0, 0, 0))
-czlist = []
-alphalist = []
-for teller in range(-50, 80):
-    alphalist.append(teller)
-    czlist.append(CZ(teller, 0, 0))
-
-plt.plot(alphalist, czlist, 'b', label=r'$C_z$')
 
 
 def CM(ALPHA, EL):
@@ -382,25 +321,6 @@ def CM(ALPHA, EL):
     CM = V + (W - V)*abs(DE)
 
     return CM
-
-print(CM(0, 0))
-
-cmlist = []
-alphalist = []
-for teller in range(-20, 50):
-    alphalist.append(teller)
-    cmlist.append(CM(teller, 0))
-
-plt.plot(alphalist, cmlist, 'b', label=r'$C_M$')
-
-cmlist = []
-alphalist = []
-for teller in range(-20, 50):
-    alphalist.append(teller)
-    cmlist.append(CM(teller, 25))
-
-plt.plot(alphalist, cmlist, 'r', label=r'$C_M 25^\circ$')
-
 
 
 def CL(ALPHA, BETA):
@@ -437,20 +357,6 @@ def CL(ALPHA, BETA):
 
     return CL
 
-print(CL(0, 0))
-
-cllist = []
-alphalist = []
-for teller in range(-10, 40):
-    alphalist.append(teller)
-    cllist.append(CL(teller, 0))
-
-plt.plot(alphalist, cllist, 'b', label=r'$C_L$')
-
-
-
-
-
 
 def CN(ALPHA, BETA):
     # yawing moment coefficient
@@ -485,17 +391,6 @@ def CN(ALPHA, BETA):
     CN = DUM*math.copysign(1.0, BETA)
 
     return CN
-
-print(CN(-10, -20))
-
-cnlist = []
-alphalist = []
-for teller in range(-10, 40):
-    alphalist.append(teller)
-    cnlist.append(CN(teller, 0))
-
-plt.plot(alphalist, cnlist, 'b', label=r'$C_N$')
-
 
 
 def DLDA(ALPHA, BETA):
@@ -532,18 +427,6 @@ def DLDA(ALPHA, BETA):
 
     return DLDA
 
-print(DLDA(-10, 0))
-
-dldalist = []
-alphalist = []
-for teller in range(-10, 40):
-    alphalist.append(teller)
-    dldalist.append(DLDA(teller, 0))
-
-plt.plot(alphalist, dldalist, 'b', label=r'$dLdail$')
-
-
-
 
 def DLDR(ALPHA, BETA):
     # rolling moment due to rudder
@@ -578,16 +461,6 @@ def DLDR(ALPHA, BETA):
     DLDR = V + (W - V)*abs(DB)
 
     return DLDR
-
-print(DLDR(-10, 0))
-
-dldrlist = []
-alphalist = []
-for teller in range(-10, 40):
-    alphalist.append(teller)
-    dldrlist.append(DLDR(teller, 0))
-
-plt.plot(alphalist, dldrlist, 'b', label=r'$dLdr$')
 
 
 def DNDA(ALPHA, BETA):
@@ -624,16 +497,6 @@ def DNDA(ALPHA, BETA):
 
     return DNDA
 
-print(DNDA(-10, 0))
-
-dndalist = []
-alphalist = []
-for teller in range(-10, 40):
-    alphalist.append(teller)
-    dndalist.append(DNDA(teller, 0))
-
-plt.plot(alphalist, dndalist, 'b', label=r'$dnda$')
-
 
 def DNDR(ALPHA, BETA):
     # yawing moment due to rudder
@@ -669,19 +532,8 @@ def DNDR(ALPHA, BETA):
 
     return DNDR
 
-print(DNDR(-10, 0))
 
-dndrlist = []
-alphalist = []
-for teller in range(-10, 40):
-    alphalist.append(teller)
-    dndrlist.append(DNDR(teller, 0))
-
-plt.plot(alphalist, dndrlist, 'b', label=r'$dndr$')
-
-
-#%%
-# 6DOF weergawe van die vlugsimulasie
+#%% 6DOF weergawe van die vlugsimulasie
 
 def f(x, t, v, THTL, EL, AIL, RDR, XCG):
     # Assign state & control variables
@@ -792,332 +644,8 @@ def f(x, t, v, THTL, EL, AIL, RDR, XCG):
 
     return xd
 
-# f(x, t, v, THTL, ELEV, AIL, RDR, XCG)
-# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, ALT, POW]
-# Table 3.3-2 F-16 Model test case, page 128
-x = [500.0, 0.5, -0.2, -1, 1, -1, 0.7, -0.8, 0.9, 1000, 900, 10000, 90]
-xd = f(x, 0, vliegtuig, 0.9, 20.0, -15.0, -20.0, 0.4)
-print(xd)
 
-
-#%% Integreer funksie
-# Loop die funksie met Runge Kutta integrasie
-# f(x, t, v, THTL, ELEV, AIL, RDR, XCG)
-# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
-# # Table 3.3-2 F-16 Model test case, page 128
-
-
-x0 = [500.0, 0.5, -0.2, -1.0, 1.0, -1.0, 0.7, -0.8, 0.9, 1000.0, 900.0, 10000.0, 90.0]
-THTL = 0.9
-EL = 0.0
-AIL = 0.0
-RDR = 0.0
-XCG = 0.4
-print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
-
-THTL = 0.127
-EL = -1.1
-AIL = 0.0
-RDR = 0.0
-XCG = 0.35
-x0 = [350, -5.71*3.14159/180, 0, 0, -5.71*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
-print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
-# Hierdie beginwaardes werk nog nie, ondersoek dit verder
-# Die swaartepunt was verkeerd.  Dis moontlik dat hierdie stelsel marginaal of onstabiel is
-
-THTL = 0.107
-EL = 0.72
-AIL = 0.0
-RDR = 0.0
-XCG = 0.35
-x0 = [400, 4.0*3.14159/180, 0, 0, 4.0*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
-print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
-
-
-t = np.linspace(0, 2.0, 10000)
-# f(x, t, v, THTL, EL, AIL, RDR, XCG):
-sol = odeint(f, x0, t, args=(vliegtuig, THTL, EL, AIL, RDR, XCG))
-
-
-plt.plot(t, sol[:, 4]*180/3.14159, 'b', label=r'$\theta (t)$')
-plt.plot(t, sol[:, 1]*180/3.14159, 'g', label=r'$\alpha (t)$')
-
-plt.legend(loc='best')
-plt.xlabel('t')
-plt.grid()
-plt.show()
-
-plt.plot(t, sol[:, 0], 'b', label='V(t)')
-
-plt.legend(loc='best')
-plt.xlabel('t')
-plt.grid()
-plt.show()
-
-
-#%% 
-# Euler integrasie
-# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
-x0 = [500.0, 0.5, -0.2, -1.0, 1.0, -1.0, 0.7, -0.8, 0.9, 1000.0, 900.0, 10000.0, 90.0]
-THTL = 0.9
-EL = 0.0
-AIL = 0.0
-RDR = 0.0
-XCG = 0.4
-print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
-
-THTL = 0.127
-EL = -1.15
-AIL = 0.0
-RDR = 0.0
-XCG = 0.4
-x0 = [350, -5.82*3.14159/180, 0, 0, -5.82*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
-print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
-
-THTL = 0.107
-EL = 0.72
-AIL = 0.0
-RDR = 0.0
-XCG = 0.35
-x0 = [400, 4.0*3.14159/180, 0, 0, 4.0*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
-print(f(x0, 0, vliegtuig, THTL, EL, AIL, RDR, XCG))
-
-
-thetaplot = [x0[4]]
-alphaplot = [x0[1]]
-tplot = [0]
-t = 0.0
-
-for teller in range(1, 5000):
-    xd = f(x0, t, vliegtuig, THTL, EL, AIL, RDR, XCG)
-    xint = [i * 0.001 for i in xd]
-    x0 = [x + y for x, y in zip(x0, xint)]
-    
-    t = t + 0.001
-    thetaplot.append(x0[4])
-    alphaplot.append(x0[1])
-    tplot.append(t)
-    
-    
-thetaplotdeg = [i*180/3.14159 for i in thetaplot]
-alphaplotdeg = [i*180/3.14159 for i in alphaplot]
-plt.plot(tplot, thetaplotdeg, 'b', label=r'$\theta (t)$')
-plt.plot(tplot, alphaplotdeg, 'g', label=r'$\alpha (t)$')
-plt.legend(loc='best')
-plt.xlabel('Tyd [s]')
-plt.ylabel(r'$\theta$ [deg]')
-plt.grid()
-plt.show()
-
-#%%
-
-# Beheer 'n reghoek met die heihoek of theta
-from math import sin
-
-# Beginvoorwaardes van simulasie
-THTL = 0.107
-trim = 0.72 # trim elevator angle
-EL = trim
-AIL = 0.0
-RDR = 0.0
-XCG = 0.35
-# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
-x0 = [400, 4.0*3.14159/180, 0, 0, 4.0*3.14159/180, 0, 0, 0, 0, 0, 0, 0, TGEAR(THTL)]
-
-
-
-# Integration time step in milliseconds
-dt = 10
-# Lengte van vliegtuig projeksie
-vlieglengte = 200
-
-# import pygame module in this program 
-import pygame 
-
-# activate the pygame library . 
-# initiate pygame and give permission 
-# to use pygame's functionality. 
-pygame.init() 
-
-# create the display surface object 
-# of specific dimension..e(500, 500). 
-win = pygame.display.set_mode((500, 500)) 
-
-# set the pygame window name 
-pygame.display.set_caption("Vliegtuig heihoek") 
-
-# object current co-ordinates 
-x = 100
-y = 250
-
-# dimensions of the object 
-width = 300
-height = 5
-
-# velocity / speed of change of control elevator
-vel = 0.1
-
-# Indicates pygame is running 
-run = True
-
-# create a font object.
-# 1st parameter is the font file
-# which is present in pygame.
-# 2nd parameter is size of the font
-font = pygame.font.Font('freesansbold.ttf', 16)
-
-# create a text surface object,
-# on which text is drawn on it.
-text = font.render(f"{'True airspeed' : ^12}{x0[0]:^10.1f}{'ft/s' :<10}", True, (255,255,255)) 
-# create a rectangular object for the
-# text surface object
-textSpoed = text.get_rect()
-# set the center of the rectangular object.
-textSpoed.center = (150, 150)
-text = font.render(f"{'Theta' : ^12}{x0[2]*180/3.14159:^10.1f}{'deg' :<10}", True, (255,255,255))
-textTheta = text.get_rect()
-# set the center of the rectangular object.
-textTheta.center = (150, 180)
-text = font.render(f"{'Throttle' : ^12}{THTL:^10.3f}", True, (255,255,255))
-textThtl = text.get_rect()
-# set the center of the rectangular object.
-textThtl.center = (150, 210)
-
-joystickPitch = 0.0
-text = font.render(f"{'Joystick pitch' : ^12}{joystickPitch:^10.3f}", True, (255,255,255))
-textjoys = text.get_rect()
-# set the center of the rectangular object.
-textjoys.center = (150, 350)
-
-
-
-# Tydelike tydstempel
-ttemp = [0]
-ttick = [0]
-
-# This dict can be left as-is, since pygame will generate a
-# pygame.JOYDEVICEADDED event for every joystick connected
-# at the start of the program.
-joysticks = {}
-
-for joystick in joysticks.values():
-    jid = joystick.get_instance_id()
-
-# infinite loop 
-while run:
-    for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True  # Flag that we are done so we exit this loop.
-
-            if event.type == pygame.JOYBUTTONDOWN:
-                print("Joystick button pressed.")
-                if event.button == 0:
-                    joystick = joysticks[event.instance_id]
-                    if joystick.rumble(0, 0.7, 500):
-                        print(f"Rumble effect played on joystick {event.instance_id}")
-
-            if event.type == pygame.JOYBUTTONUP:
-                print("Joystick button released.")
-
-            # Handle hotplugging
-            if event.type == pygame.JOYDEVICEADDED:
-                # This event will be generated when the program starts for every
-                # joystick, filling up the list without needing to create them manually.
-                joy = pygame.joystick.Joystick(event.device_index)
-                joysticks[joy.get_instance_id()] = joy
-                print(f"Joystick {joy.get_instance_id()} connencted")
-
-            if event.type == pygame.JOYDEVICEREMOVED:
-                del joysticks[event.instance_id]
-                print(f"Joystick {event.instance_id} disconnected")
-    # x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
-    xd = f(x0, t, vliegtuig, THTL, EL, AIL, RDR, XCG)
-    
-    xint = [i * (dt/1000) for i in xd]
-    x0 = [x + y for x, y in zip(x0, xint)]
-    # creates time delay of 10ms 
-    pygame.time.delay(dt)
-    # Neem die tyd op om te kyk of die simulasie intyds is
-    ttick = ttick + [pygame.time.get_ticks()]
-    ttemp = ttemp + [ttemp[-1] + dt]
-    # iterate over the list of Event objects 
-    # that was returned by pygame.event.get() method. 
-    for event in pygame.event.get(): 
-        # if event object type is QUIT 
-        # then quitting the pygame 
-        # and program both. 
-       if event.type == pygame.QUIT: 
-            # it will make exit the while loop 
-            run = False
-    # stores keys pressed 
-    keys = pygame.key.get_pressed()
-
-    # if left arrow key is pressed 
-    if keys[pygame.K_LEFT] and x>0:
-        # decrement in x co-ordinate
-        x -= vel 
-    # if left arrow key is pressed 
-    if keys[pygame.K_RIGHT] and x<500-width: 
-        
-        # increment in x co-ordinate 
-        x += vel 
-        
-    # if left arrow key is pressed 
-    if keys[pygame.K_UP] and y>0: 
-        
-        # decrement in y co-ordinate 
-        trim += vel 
-        
-    # if left arrow key is pressed 
-    if keys[pygame.K_DOWN] and y<500-height: 
-        # increment in y co-ordinate 
-        trim -= vel 
-        
-    # if left arrow key is pressed 
-    if keys[pygame.K_9]: 
-        # increment in y co-ordinate 
-        THTL += 0.001
-        
-    if keys[pygame.K_3]: 
-        # increment in y co-ordinate 
-        THTL -= 0.001 
-            
-    # completely fill the surface object 
-    # with black colour 
-    win.fill((0, 0, 0))
-    
-    # drawing object on screen which is rectangle here 
-    pygame.draw.rect(win, (255, 0, 0), (100, y - vlieglengte*sin(x0[4]), width, height))
-    # Teken die verwysing van die heihoek
-    pygame.draw.rect(win, (0, 255, 0), (80, y, 20, 10))
-    pygame.draw.rect(win, (0, 255, 0), (400, y, 20, 10))
-    text = font.render(f"{'True airspeed' : ^12}{x0[0]:^10.1f}{'ft/s' :<10}", True, (255,255,255))
-    win.blit(text, textSpoed)
-    text = font.render(f"{'Theta' : ^12}{x0[4]*180/3.14159:^10.1f}{'deg' :<10}", True, (255,255,255))
-    win.blit(text, textTheta)
-    text = font.render(f"{'Throttle' : ^12}{THTL:^10.3f}", True, (255,255,255))    
-    win.blit(text, textThtl)
-    for joystick in joysticks.values():
-        jid = joystick.get_instance_id()
-        joystickPitch = joystick.get_axis(1)
-    text = font.render(f"{'Joystick' : ^12}{joystickPitch:^10.3f}", True, (255,255,255))
-    win.blit(text, textjoys)
-    EL = trim - joystickPitch*25
-    pygame.display.update()
-
-     
- 
-
-# closes the pygame window 
-pygame.quit() 
-
-
-    
-
-
-
-#%%
-# Trimmer funksie
+#%% Trimmer funksie
 # Los op die gelykvlug kondisies vir die vliegtuigmodel
 
 
@@ -1147,96 +675,3 @@ def doelfunksie(inset, vliegtuig, konstant):
 
 
 #%%
-
-# Druk opskrifte
-print(f"{'Speed' :^10}{'Throttle' :^10}{'AOA' :^10}{'Elevator' :^10}")
-print(f"{'ft/s' :^10}{' ' :^10}{'deg' :^10}{'deg' :^10}")
-
-# x = [VT, ALPHA, BETA, PHI, THETA, PSI, P, Q, R, North, East, ALT, POW]
-# inset = [throttle, elevator [deg], alpha [rad], aileron [deg], rudder [deg], beta [rad]]
-inset = [0.123, 0.52, -5.71*3.14159/180, 0, 0, 0]
-# konstant = [Spoed [ft/s], hoogte [ft]]
-konstant = [350, 0, 0.35]
-res = minimize(doelfunksie, inset, method='nelder-mead', 
-               args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
-print(f"{konstant[0] :^10}{res.x[0]:7.3f}{res.x[2]*180/3.14159:8.2f}{res.x[1]:8.2f}")
-
-spoed = [130, 140, 150, 170, 200, 260, 300, 350, 400, 440, 500, 540, 600, 640, 700, 800]
-
-smoorklep = []
-
-for spoedgetal in spoed:
-    inset = [0.5, 0.0, 10*3.14159/180, 0, 0, 0]
-    # konstant = [Spoed [ft/s], hoogte [ft]]
-    konstant = [spoedgetal, 0, 0.35]
-    res = minimize(doelfunksie, inset, method='nelder-mead', 
-               args=(vliegtuig, konstant), options={'xatol': 1e-8, 'disp': False})
-    print(f"{konstant[0] :^10}{res.x[0]:7.3f}{res.x[2]*180/3.14159:8.2f}{res.x[1]:8.2f}")
-    smoorklep.append(res.x[0])
-
-smoorklepvergelyk = [0.816, 0.736, 0.619, 0.464, 0.287, 0.148, 0.122, 0.107, 0.108, 0.113, 
-                     0.137, 0.160, 0.200, 0.230, 0.282, 0.378]
-plt.plot(spoed, smoorklep, 'b', label='Clean aircraft sea level')
-plt.plot(spoed, smoorklepvergelyk, 'r', label='Textbook')
-plt.legend(loc='best')
-plt.xlabel('Spoed [ft/s]')
-plt.ylabel('Smoorklep []')
-plt.grid()
-plt.show()
-
-# Vergelyking met die handboek is baie goed.
-
-
-
-#%%
-# How to interpolate in 2D using numpy and scipy
-#
-import numpy as np
-from scipy.interpolate import interp2d
-import matplotlib.pyplot as plt
-
-x = np.linspace(0, 4, 13)
-y = np.array([0, 2, 3, 3.5, 3.75, 3.875, 3.9375, 4])
-X, Y = np.meshgrid(x, y)
-Z = np.sin(np.pi*X/2) * np.exp(Y/2)
-
-x2 = np.linspace(0, 4, 65)
-y2 = np.linspace(0, 4, 65)
-f = interp2d(x, y, Z, kind='cubic')
-Z2 = f(x2, y2)
-
-fig, ax = plt.subplots(nrows=1, ncols=2)
-ax[0].pcolormesh(X, Y, Z)
-
-X2, Y2 = np.meshgrid(x2, y2)
-ax[1].pcolormesh(X2, Y2, Z2)
-
-plt.show()
-
-
-
-
-# %%
-# Plot 3D voorbeeld
-
-# importing libraries
-#from mpl_toolkits import mplot3d
-
-# defining surface and axes
-x = np.outer(np.linspace(-2, 2, 10), np.ones(10))
-y = x.copy().T
-z = np.cos(x ** 2 + y ** 3)
- 
-fig = plt.figure()
- 
-# syntax for 3-D plotting
-ax = plt.axes(projection='3d')
- 
-# syntax for plotting
-ax.plot_surface(x, y, z, cmap='viridis',\
-                edgecolor='green')
-ax.set_title('Surface plot example')
-plt.show()
-# %%
-
-
